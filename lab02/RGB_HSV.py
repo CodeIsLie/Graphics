@@ -45,6 +45,8 @@ class Application(tk.Frame):
         image = Image.fromarray(img)
         image = ImageTk.PhotoImage(image)
 
+        #global panelA
+        # panelA = None
         panelA = Label(image=image)
         panelA.image = image
         panelA.grid(row=0, column=0, rowspan=5, columnspan=2, sticky=W + E + N + S)
@@ -58,14 +60,13 @@ class Application(tk.Frame):
             path = filedialog.askopenfilename()
             if len(path) < 1:
                 return
-            img = imread(filename)
+            img = imread(path)
             img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
             image = Image.fromarray(img)
             image = ImageTk.PhotoImage(image)
 
-            panelA = Label(image=image)
+            panelA.configure(image=image)
             panelA.image = image
-            panelA.grid(row=0, column=0, rowspan=5, columnspan=2, sticky=W + E + N + S)
 
         self.choose_button = tk.Button(root)
         self.choose_button["text"] = "Choose an image"
@@ -86,16 +87,16 @@ class Application(tk.Frame):
         def changeValue(value):
             pass
 
-        varH = DoubleVar(value=50)
-        scaleH = Scale(root, variable=varH, command=changeHue)
+        varH = DoubleVar(value=120)
+        scaleH = Scale(root, variable=varH, from_=0, to=255, command=changeHue)
         scaleH.grid(row = 0, column = 3, rowspan=5, columnspan = 1, sticky = N+S)
 
-        varS = DoubleVar()
-        scaleS = Scale(root, variable=varS)
+        varS = DoubleVar(value=120)
+        scaleS = Scale(root, variable=varS, from_=0, to=255, command=changeSaturation)
         scaleS.grid(row=0, column=4, rowspan=5, columnspan=1, sticky=N + S)
 
-        varV = DoubleVar()
-        scaleV = Scale(root, variable=varV)
+        varV = DoubleVar(value=120)
+        scaleV = Scale(root, variable=varV, from_=0, to=255, command=changeValue)
         scaleV.grid(row=0, column=5, rowspan=5, columnspan=4, sticky=N + S)
 
 
