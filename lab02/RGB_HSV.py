@@ -9,9 +9,11 @@ from tkinter import filedialog
 from tkinter import *
 from PIL import Image
 from PIL import ImageTk
-from numpy import dstack
 
-# import tkFileDialog
+from numpy import dstack
+from numpy import array
+import numpy as np
+
 
 def RGB2HSV(img):
     float_img = cv2.normalize(img.astype('float'), None, 0.0, 1.0, cv2.NORM_MINMAX)
@@ -19,8 +21,8 @@ def RGB2HSV(img):
     G = float_img[:, :, 1].tolist()
     B = float_img[:, :, 2].tolist()
 
-    MAX = [max(r, g, b) for r, g, b in zip(R, G, B)]
-    MIN = [min(r, g, b) for r, g, b in zip(R, G, B)]
+    MAX = [[max(r, g, b) for r, g, b in zip(rs, gs, bs)] for rs, gs, bs in zip(R, G, B)]
+    MIN = [[min(r, g, b) for r, g, b in zip(rs, gs, bs)] for rs, gs, bs in zip(R, G, B)]
 
     H = [[0 if max1 == min1 else
          60 * (g - b) // (max1 - min1) + 0 if max == r and g >= b else
@@ -32,11 +34,23 @@ def RGB2HSV(img):
     S = [[0 if max1 == 0 else 1 - min1/max1 for min1, max1 in zip(mins, maxes)] for mins, maxes in zip(MIN, MAX)]
     V = MAX
 
+    H = (array(H) // 2).astype(int)
+    S = (array(S) * 255).astype(int)
+    V = (array(V) * 255).astype(int)
+
     HSV_img = dstack((H, S, V))
     return HSV_img
+    # , cv2.cvtColor(img, cv2.COLOR_RGB2HSV)
 
 def HSV2RGB(img):
-    return img
+    H = img[:, :, 0]
+    S = img[:, :, 1]
+    V = img[:, :, 2]
+
+    img = img.astype(np.uint8)
+    RGB_img = cv2.cvtColor(img, cv2.COLOR_HSV2RGB)
+
+    return RGB_img
 
 def getImg(path):
     img = imread(path)
@@ -45,11 +59,13 @@ def getImg(path):
     image = ImageTk.PhotoImage(image)
     return image
 
+
 class Application(tk.Frame):
     def __init__(self, master=None):
         super().__init__(master)
+        self.RGB_img = None
+        self.HSV_img = None
 
-        global panelA
         # panelA = None
         self.createGui()
 
@@ -68,14 +84,14 @@ class Application(tk.Frame):
 
         self.RGB_img = img
         self.HSV_img = RGB2HSV(img)
-        image = RGB2HSV(img)
+        # image = RGB2HSV(img)
 
-        image = Image.fromarray(image)
+        image = Image.fromarray(img)
         image = ImageTk.PhotoImage(image)
 
-        panelA = Label(image=image)
-        panelA.image = image
-        panelA.grid(row=0, column=0, rowspan=5, columnspan=2, sticky=W + E + N + S)
+        self.panelA = Label(image=image)
+        self.panelA.image = image
+        self.panelA.grid(row=0, column=0, rowspan=5, columnspan=2, sticky=W + E + N + S)
 
         self.createScales()
         self.createButtons()
@@ -94,17 +110,26 @@ class Application(tk.Frame):
 
             image = Image.fromarray(img)
             image = ImageTk.PhotoImage(image)
-            panelA.configure(image=image)
-            panelA.image = image
+            self.panelA.configure(image=image)
+            self.panelA.image = image
 
         self.choose_button = tk.Button(root)
         self.choose_button["text"] = "Choose an image"
         self.choose_button["command"] = choose_img
         self.choose_button.grid(row=5, column=0, rowspan=1, columnspan=2, sticky=W + E)
 
+        def test_convertations():
+            hsv_img = RGB2HSV(self.RGB_img)
+            rgb_img = HSV2RGB(hsv_img)
+
+            image = Image.fromarray(rgb_img)
+            image = ImageTk.PhotoImage(image)
+            self.panelA.configure(image=image)
+            self.panelA.image = image
+
         self.save_button = tk.Button(root)
         self.save_button["text"] = "Save img to file"
-        self.save_button["command"] = root.destroy
+        self.save_button["command"] = test_convertations
         self.save_button.grid(row=5, column=3, rowspan=1, columnspan=4, sticky=W + E)
 
     def createScales(self):
