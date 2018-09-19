@@ -101,6 +101,9 @@ class Application(tk.Frame):
 
         self.RGB_img = img
         self.HSV_img = RGB2HSV(img)
+        self.H = self.HSV_img[:, :, 0]
+        self.S = self.HSV_img[:, :, 1]
+        self.V = self.HSV_img[:, :, 2]
         image = Image.fromarray(img)
         image = ImageTk.PhotoImage(image)
 
@@ -122,6 +125,9 @@ class Application(tk.Frame):
 
             self.RGB_img = img
             self.HSV_img = RGB2HSV(img)
+            self.H = self.HSV_img[:, :, 0]
+            self.S = self.HSV_img[:, :, 1]
+            self.V = self.HSV_img[:, :, 2]
 
             image = Image.fromarray(img)
             image = ImageTk.PhotoImage(image)
@@ -149,8 +155,9 @@ class Application(tk.Frame):
         def changeHue(hue):
             H = self.HSV_img[:, :, 0]
             H = (H + (int(hue) - 120)) % 360
-            S = self.HSV_img[:, :, 1]
-            V = self.HSV_img[:, :, 2]
+            self.H = H
+            S = self.S
+            V = self.V
             self.setImage(HSV2RGB(dstack((H, S, V))))
 
         def changeSaturation(sat):
@@ -159,10 +166,11 @@ class Application(tk.Frame):
                 return min(100, s + sat - 100) if sat >= 100 else max(0, s + sat - 100)
             modifySat = np.vectorize(modifySat)
 
-            H = self.HSV_img[:, :, 0]
+            H = self.H
             S = self.HSV_img[:, :, 1]
             S = modifySat(S)
-            V = self.HSV_img[:, :, 2]
+            self.S = S
+            V = self.V
             self.setImage(HSV2RGB(dstack((H, S, V))))
 
         def changeValue(value):
@@ -171,10 +179,11 @@ class Application(tk.Frame):
                 return min(100, v + value - 100) if value >= 100 else max(0, v + value - 100)
             modifyValue = np.vectorize(modifyValue)
 
-            H = self.HSV_img[:, :, 0]
-            S = self.HSV_img[:, :, 1]
+            H = self.H
+            S = self.S
             V = self.HSV_img[:, :, 2]
             V = modifyValue(V)
+            self.V = V
             self.setImage(HSV2RGB(dstack((H, S, V))))
 
         varH = DoubleVar(value=120)
