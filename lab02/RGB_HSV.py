@@ -16,7 +16,7 @@ import numpy as np
 
 
 def RGB2HSV(img):
-    float_img = cv2.normalize(img.astype('float'), None, 0.0, 1.0, cv2.NORM_MINMAX)
+    float_img = img.astype('float') / 255
     R = float_img[:, :, 0].tolist()
     G = float_img[:, :, 1].tolist()
     B = float_img[:, :, 2].tolist()
@@ -25,32 +25,47 @@ def RGB2HSV(img):
     MIN = [[min(r, g, b) for r, g, b in zip(rs, gs, bs)] for rs, gs, bs in zip(R, G, B)]
 
     H = [[0 if max1 == min1 else
-         60 * (g - b) // (max1 - min1) + 0 if max == r and g >= b else
-         60 * (g - b) // (max1 - min1) + 360 if max == r else
-         60 * (b - r) // (max1 - min1) + 120 if max == g else
-         60 * (r - g) // (max1 - min1) + 240
+         60 * ( (6 + (g - b) / (max1 - min1)) % 6) if max1 == r else
+         60 * (b - r) / (max1 - min1) + 120 if max1 == g else
+         60 * (r - g) / (max1 - min1) + 240
          for max1, min1, r, g, b in zip(maxes, mines, rs, gs, bs)]
           for maxes, mines, rs, gs, bs in zip(MAX, MIN, R, G, B)]
+
     S = [[0 if max1 == 0 else 1 - min1/max1 for min1, max1 in zip(mins, maxes)] for mins, maxes in zip(MIN, MAX)]
     V = MAX
 
-    H = (array(H) // 2).astype(int)
-    S = (array(S) * 255).astype(int)
-    V = (array(V) * 255).astype(int)
+    H = ( (array(H))).astype(int)
+    S = (array(S) * 100).astype(int)
+    V = (array(V) * 100).astype(int)
 
     HSV_img = dstack((H, S, V))
     return HSV_img
-    # , cv2.cvtColor(img, cv2.COLOR_RGB2HSV)
 
 def HSV2RGB(img):
-    H = img[:, :, 0]
-    S = img[:, :, 1]
-    V = img[:, :, 2]
+    H = (img[:, :, 0])
+    S = (img[:, :, 1]).astype(int)
+    V = (img[:, :, 2]).astype(int)
 
-    img = img.astype(np.uint8)
-    RGB_img = cv2.cvtColor(img, cv2.COLOR_HSV2RGB)
+    Hi = [[ h//60 % 6 for h in hs] for hs in H]
+    Vmin = [[ (100-s)*v/100 for s, v in zip(ss, vs)] for ss, vs in zip(S, V)]
+    a = [[ (v-vmin)* (h%60)/60 for v, vmin, h in zip(vs, vmins, hs)] for vs, vmins, hs in zip(V, Vmin, H)]
+    Vinc = [[vmin + a for vmin, a in zip(vmins, As)] for vmins, As in zip(Vmin, a)]
+    Vdec = [[v - a for v, a in zip(vs, As)] for vs, As in zip(V, a)]
 
-    return RGB_img
+    RGB = [ [(v, vi, vm) if h == 0 else
+             (vd, v, vm) if h == 1 else
+             (vm, v, vi) if h == 2 else
+             (vm, vd, v) if h == 3 else
+             (vi, vm, v) if h == 4 else
+             (v, vm, vd)
+             for v, vd, vi, vm, h in zip(vs, vds, vis, vms, hs)]
+            for vs, vds, vis, vms, hs in zip(V, Vdec, Vinc, Vmin, Hi)]
+
+    RGB = array(RGB)
+    RGB = RGB * 255/100
+    RGB = RGB.astype(np.uint8)
+
+    return RGB
 
 def getImg(path):
     img = imread(path)
