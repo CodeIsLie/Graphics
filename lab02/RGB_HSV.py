@@ -144,29 +144,58 @@ class Application(tk.Frame):
 
         self.save_button = tk.Button(root)
         self.save_button["text"] = "Save img to file"
-        self.save_button["command"] = test_convertations
+        self.save_button["command"] = root.destroy
         self.save_button.grid(row=5, column=3, rowspan=1, columnspan=4, sticky=W + E)
+
+    def setImage(self, image):
+        self.RGB_img = image
+        image = Image.fromarray(image)
+        image = ImageTk.PhotoImage(image)
+        self.panelA.configure(image=image)
+        self.panelA.image = image
 
     def createScales(self):
         def changeHue(hue):
-            pass
+            H = self.HSV_img[:, :, 0]
+            H = (H + (int(hue) - 120)) % 360
+            S = self.HSV_img[:, :, 1]
+            V = self.HSV_img[:, :, 2]
+            self.setImage(HSV2RGB(dstack((H, S, V))))
 
         def changeSaturation(sat):
-            pass
+            sat = int(sat)
+            def modifySat(s):
+                return min(100, s + sat - 100) if sat >= 100 else max(0, s + sat - 100)
+            modifySat = np.vectorize(modifySat)
+
+            H = self.HSV_img[:, :, 0]
+            S = self.HSV_img[:, :, 1]
+            S = modifySat(S)
+            V = self.HSV_img[:, :, 2]
+            self.setImage(HSV2RGB(dstack((H, S, V))))
 
         def changeValue(value):
-            pass
+            value = int(value)
+            def modifyValue(v):
+                return min(100, v + value - 100) if value >= 100 else max(0, v + value - 100)
+            modifyValue = np.vectorize(modifyValue)
+
+            H = self.HSV_img[:, :, 0]
+            S = self.HSV_img[:, :, 1]
+            V = self.HSV_img[:, :, 2]
+            V = modifyValue(V)
+            self.setImage(HSV2RGB(dstack((H, S, V))))
 
         varH = DoubleVar(value=120)
-        scaleH = Scale(root, variable=varH, from_=0, to=255, command=changeHue)
+        scaleH = Scale(root, variable=varH, from_=0, to=360, command=changeHue)
         scaleH.grid(row=0, column=3, rowspan=5, columnspan=1, sticky=N + S)
 
-        varS = DoubleVar(value=120)
-        scaleS = Scale(root, variable=varS, from_=0, to=255, command=changeSaturation)
+        varS = DoubleVar(value=100)
+        scaleS = Scale(root, variable=varS, from_=0, to=200, command=changeSaturation)
         scaleS.grid(row=0, column=4, rowspan=5, columnspan=1, sticky=N + S)
 
-        varV = DoubleVar(value=120)
-        scaleV = Scale(root, variable=varV, from_=0, to=255, command=changeValue)
+        varV = DoubleVar(value=100)
+        scaleV = Scale(root, variable=varV, from_=0, to=200, command=changeValue)
         scaleV.grid(row=0, column=5, rowspan=5, columnspan=4, sticky=N + S)
 
 root = tk.Tk()
