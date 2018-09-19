@@ -139,9 +139,16 @@ class Application(tk.Frame):
         self.choose_button["command"] = choose_img
         self.choose_button.grid(row=5, column=0, rowspan=1, columnspan=2, sticky=W + E)
 
+        def save_img():
+            path = filedialog.asksaveasfile(mode='w', filetypes=(("Image files", "*.png"),("Jpeg files", "*.jpg")))
+            if path is None:
+                return
+            path = path.name
+            imwrite(path, cv2.cvtColor(self.RGB_img, cv2.COLOR_RGB2BGR))
+
         self.save_button = tk.Button(root)
         self.save_button["text"] = "Save img to file"
-        self.save_button["command"] = root.destroy
+        self.save_button["command"] = save_img
         self.save_button.grid(row=5, column=3, rowspan=1, columnspan=4, sticky=W + E)
 
     def setImage(self, image):
