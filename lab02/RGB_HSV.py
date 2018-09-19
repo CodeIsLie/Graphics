@@ -193,17 +193,24 @@ class Application(tk.Frame):
             self.V = V
             self.setImage(HSV2RGB(dstack((H, S, V))))
 
+        labH = tk.Label(root, text="H")
+        labH.grid(row=0, column=3, rowspan=1, columnspan=1, sticky=S)
+        labS = tk.Label(root, text="S")
+        labS.grid(row=0, column=4, rowspan=1, columnspan=1, sticky=S)
+        labV = tk.Label(root, text="V")
+        labV.grid(row=0, column=5, rowspan=1, columnspan=1, sticky=S)
+
         varH = DoubleVar(value=120)
         scaleH = Scale(root, variable=varH, from_=0, to=360, command=changeHue)
-        scaleH.grid(row=0, column=3, rowspan=5, columnspan=1, sticky=N + S)
+        scaleH.grid(row=1, column=3, rowspan=4, columnspan=1, sticky=N + S)
 
         varS = DoubleVar(value=100)
         scaleS = Scale(root, variable=varS, from_=0, to=200, command=changeSaturation)
-        scaleS.grid(row=0, column=4, rowspan=5, columnspan=1, sticky=N + S)
+        scaleS.grid(row=1, column=4, rowspan=4, columnspan=1, sticky=N + S)
 
         varV = DoubleVar(value=100)
         scaleV = Scale(root, variable=varV, from_=0, to=200, command=changeValue)
-        scaleV.grid(row=0, column=5, rowspan=5, columnspan=4, sticky=N + S)
+        scaleV.grid(row=1, column=5, rowspan=4, columnspan=4, sticky=N + S)
 
 root = tk.Tk()
 app = Application(master=root)
