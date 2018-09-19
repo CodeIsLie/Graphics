@@ -21,17 +21,22 @@ def RGB2HSV(img):
     G = float_img[:, :, 1].tolist()
     B = float_img[:, :, 2].tolist()
 
-    MAX = [[max(r, g, b) for r, g, b in zip(rs, gs, bs)] for rs, gs, bs in zip(R, G, B)]
-    MIN = [[min(r, g, b) for r, g, b in zip(rs, gs, bs)] for rs, gs, bs in zip(R, G, B)]
+    def maxF(r, g, b):
+        return max(r, g, b)
+    def minF(r, g, b):
+        return min(r, g, b)
+    maxF = np.vectorize(maxF)
+    MAX = maxF(R, G, B)
+    MIN = minF(R, G, B)
 
-    H = [[0 if max1 == min1 else
-         60 * ( (6 + (g - b) / (max1 - min1)) % 6) if max1 == r else
-         60 * (b - r) / (max1 - min1) + 120 if max1 == g else
-         60 * (r - g) / (max1 - min1) + 240
-         for max1, min1, r, g, b in zip(maxes, mines, rs, gs, bs)]
-          for maxes, mines, rs, gs, bs in zip(MAX, MIN, R, G, B)]
+    H = np.vectorize(lambda max1, min1, r, g, b:
+                     0 if max1 == min1 else
+                     60 * ((6 + (g - b) / (max1 - min1)) % 6) if max1 == r else
+                     60 * (b - r) / (max1 - min1) + 120 if max1 == g else
+                     60 * (r - g) / (max1 - min1) + 240
+                     )(MAX, MIN, R, G, B)
 
-    S = [[0 if max1 == 0 else 1 - min1/max1 for min1, max1 in zip(mins, maxes)] for mins, maxes in zip(MIN, MAX)]
+    S = np.vectorize(lambda min1, max1: 0 if max1 == 0 else 1 - min1/max1)(MIN, MAX)
     V = MAX
 
     H = ( (array(H))).astype(int)
@@ -46,22 +51,20 @@ def HSV2RGB(img):
     S = (img[:, :, 1]).astype(int)
     V = (img[:, :, 2]).astype(int)
 
-    Hi = [[ h//60 % 6 for h in hs] for hs in H]
-    Vmin = [[ (100-s)*v/100 for s, v in zip(ss, vs)] for ss, vs in zip(S, V)]
-    a = [[ (v-vmin)* (h%60)/60 for v, vmin, h in zip(vs, vmins, hs)] for vs, vmins, hs in zip(V, Vmin, H)]
-    Vinc = [[vmin + a for vmin, a in zip(vmins, As)] for vmins, As in zip(Vmin, a)]
-    Vdec = [[v - a for v, a in zip(vs, As)] for vs, As in zip(V, a)]
-
-    RGB = [ [(v, vi, vm) if h == 0 else
+    Hi  = np.vectorize(lambda h: h//60 % 6)(H)
+    Vmin = np.vectorize(lambda s, v: (100-s)*v/100)(S, V)
+    a = np.vectorize(lambda v, vmin, h: (v-vmin)* (h%60)/60)(V, Vmin, H)
+    Vinc = Vmin + a
+    Vdec = V - a
+    R, G, B = np.vectorize(lambda v, vd, vi, vm, h:
+             (v, vi, vm) if h == 0 else
              (vd, v, vm) if h == 1 else
              (vm, v, vi) if h == 2 else
              (vm, vd, v) if h == 3 else
              (vi, vm, v) if h == 4 else
-             (v, vm, vd)
-             for v, vd, vi, vm, h in zip(vs, vds, vis, vms, hs)]
-            for vs, vds, vis, vms, hs in zip(V, Vdec, Vinc, Vmin, Hi)]
+             (v, vm, vd))(V, Vdec, Vinc, Vmin, Hi)
 
-    RGB = array(RGB)
+    RGB = dstack((R, G, B))
     RGB = RGB * 255/100
     RGB = RGB.astype(np.uint8)
 
@@ -73,7 +76,6 @@ def getImg(path):
     image = Image.fromarray(img)
     image = ImageTk.PhotoImage(image)
     return image
-
 
 class Application(tk.Frame):
     def __init__(self, master=None):
@@ -99,8 +101,6 @@ class Application(tk.Frame):
 
         self.RGB_img = img
         self.HSV_img = RGB2HSV(img)
-        # image = RGB2HSV(img)
-
         image = Image.fromarray(img)
         image = ImageTk.PhotoImage(image)
 
@@ -132,15 +132,6 @@ class Application(tk.Frame):
         self.choose_button["text"] = "Choose an image"
         self.choose_button["command"] = choose_img
         self.choose_button.grid(row=5, column=0, rowspan=1, columnspan=2, sticky=W + E)
-
-        def test_convertations():
-            hsv_img = RGB2HSV(self.RGB_img)
-            rgb_img = HSV2RGB(hsv_img)
-
-            image = Image.fromarray(rgb_img)
-            image = ImageTk.PhotoImage(image)
-            self.panelA.configure(image=image)
-            self.panelA.image = image
 
         self.save_button = tk.Button(root)
         self.save_button["text"] = "Save img to file"
