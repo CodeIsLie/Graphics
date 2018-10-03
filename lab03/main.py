@@ -47,46 +47,53 @@ def calc_points(point, border_color):
     while pix[current_x + 1, current_y] != border_color and current_x <= DEFAULT_WIDTH - 1:
         current_x += 1
     current_x += 1
+
     if current_x == DEFAULT_WIDTH:
         return {()}
 
     start_x = current_x
     start_y = current_y
 
-    _, height = image.size
-    res_points_set = dict()
-    for y in range(height + 1):
-        res_points_set[y] = []
-    res_points_set[current_y].append(current_x)
-
+    res_points_set = [(current_x, current_y)]
     current_direction = Direction.Down
 
     for x in get_neighbours(current_direction, (current_x, current_y)):
         if pix[x[0][0], x[0][1]] == border_color:
-            xC, yC = x[0]
-            res_points_set[yC].append(xC)
+            res_points_set.append(x[0])
             current_x = x[0][0]
             current_y = x[0][1]
             current_direction = x[1]
             break
     while current_x != start_x or current_y != start_y:
+        # print((current_x, current_y))
         neighbours = get_neighbours(current_direction, (current_x, current_y))
         for x in neighbours:
             # print('  ', x)
             if pix[x[0][0], x[0][1]] == border_color:
                 # print('    ', x)
-                xC, yC = x[0]
-                res_points_set[yC].append(xC)
+                res_points_set.append(x[0])
                 current_x = x[0][0]
                 current_y = x[0][1]
                 current_direction = x[1]
                 break
 
-    for y in list(res_points_set.keys()):
-        if len(res_points_set[y]) < 2:
-            del res_points_set[y]
     return res_points_set
 
+
+def paint(event):
+    if event.x <= 1 or event.x >= DEFAULT_WIDTH - 1 or event.y <= 1 or event.y >= DEFAULT_HEIGHT - 1:
+        return
+
+    start_x = event.x - 1
+    start_y = event.y - 1
+
+    border_points = calc_points((start_x, start_y), (0, 0, 0, 255))
+    border_points = get_borders(border_points)
+    paint_figure(border_points, image)
+
+    # draw.rectangle([1, 1, DEFAULT_WIDTH - 1, DEFAULT_HEIGHT - 1], outline='black')
+    canvas.image = ImageTk.PhotoImage(image)
+    canvas.create_image(0, 0, image=canvas.image, anchor='nw')
 
 def select_borders(event):
     if event.x <= 1 or event.x >= DEFAULT_WIDTH - 1 or event.y <= 1 or event.y >= DEFAULT_HEIGHT - 1:
@@ -104,23 +111,6 @@ def select_borders(event):
     # draw.rectangle([1, 1, DEFAULT_WIDTH - 1, DEFAULT_HEIGHT - 1], outline='black')
     canvas.image = ImageTk.PhotoImage(image)
     canvas.create_image(0, 0, image=canvas.image, anchor='nw')
-
-def paint(event):
-    if event.x <= 1 or event.x >= DEFAULT_WIDTH - 1 or event.y <= 1 or event.y >= DEFAULT_HEIGHT - 1:
-        return
-
-    pix = image.load()
-    start_x = event.x - 1
-    start_y = event.y - 1
-
-    border_points = calc_points((start_x, start_y), (0, 0, 0, 255))
-    # borders = get_borders(border_points)
-    paint_figure(border_points, image)
-
-    # draw.rectangle([1, 1, DEFAULT_WIDTH - 1, DEFAULT_HEIGHT - 1], outline='black')
-    canvas.image = ImageTk.PhotoImage(image)
-    canvas.create_image(0, 0, image=canvas.image, anchor='nw')
-
 
 root = Tk()
 root.title("Border Picker")
