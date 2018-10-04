@@ -23,7 +23,9 @@ def get_borders(points):
         ordered_all[y].append(x)
         if y_prev<y>y_next or y_prev>y<y_next:
             ordered_all[y].append(x)
-        direction[(x,y)] = 1 if y > y_prev else 2 if y < y_prev else 0
+        left_dir = 1 if y > y_prev else 2 if y < y_prev else 0
+        right_dir = 1 if y > y_next else 2 if y < y_next else 0
+        direction[(x, y)] = right_dir, left_dir
 
     for y in range(minY, maxY+1, 1):
         pair_complete = True
@@ -31,35 +33,42 @@ def get_borders(points):
         length = len(points)
 
         # 1 - down, 2 - up, 0 - stay at on line
-        long_line = False
-        start_direction = 0
         i = 0
+        left_pix = -1
+        right_pix = -1
         while i < length:
             if pair_complete:
-                if start_direction == 0:
-                    start_direction = direction[(points[i], y)]
+                complex_line = False
+                if left_pix == -1:
+                    left_pix = points[i]
+                else:
+                    complex_line = True
                 x_next = points[i + 1 - length]
                 while points[i] == x_next - 1:
                     i += 1
                     x_next = points[i + 1 - length]
-                    long_line = True
 
-                cur_direction = direction[(x_next, y)]
-                if long_line:
-                    if (start_direction, cur_direction) in {(1, 2), (2, 1)}:
-                        ordered_points[y].append(points[i])
+                right_pix = points[i]
+                left_dir = direction[(left_pix, y)]
+                left_dir = left_dir[0] if left_dir[0] != 0 else left_dir[1]
+                right_dir = direction[(right_pix, y)]
+                right_dir = right_dir[1] if right_dir[1] != 0 else right_dir[0]
+                if complex_line:
+                    if (left_dir, right_dir) in {(2, 2), (1, 1)}:
+                        ordered_points[y].append(right_pix)
                         pair_complete = False
                 else:
-                    ordered_points[y].append(points[i])
-                    pair_complete = False
+                    if (left_dir, right_dir) in {(1, 2), (2, 1)}:
+                        ordered_points[y].append(right_pix)
+                        pair_complete = False
 
-                long_line = False
+                left_pix = -1
                 i += 1
             else:
                 ordered_points[y].append(points[i])
+                if points[i+1-length] == points[i]+1 or points[i+1-length] == points[i]:
+                    left_pix = points[i]
                 pair_complete = True
-                start_direction = direction[(points[i], y)]
-                long_line = points[i + 1 - length] == points[i] + 1
                 i += 1
 
     return ordered_points

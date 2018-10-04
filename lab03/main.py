@@ -44,6 +44,7 @@ def calc_points(point, border_color):
     current_x = point[0]
     current_y = point[1]
 
+    d = pix[current_x + 1, current_y]
     while pix[current_x + 1, current_y] != border_color and current_x <= DEFAULT_WIDTH - 1:
         current_x += 1
     current_x += 1
@@ -87,7 +88,7 @@ def paint(event):
     start_x = event.x - 1
     start_y = event.y - 1
 
-    border_points = calc_points((start_x, start_y), (0, 0, 0, 255))
+    border_points = calc_points((start_x, start_y), (0, 0, 0))
     border_points = get_borders(border_points)
     paint_figure(border_points, image)
 
@@ -119,7 +120,7 @@ root.resizable(False, False)
 canvas = Canvas(root, bg='white', width=DEFAULT_WIDTH, height=DEFAULT_WIDTH)
 canvas.grid(row=0, columnspan=10)
 
-image = Image.open("in.png")
+image = Image.open("im3.png")
 draw = ImageDraw.Draw(image)
 
 canvas.image = ImageTk.PhotoImage(image)
