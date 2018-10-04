@@ -44,7 +44,6 @@ def calc_points(point, border_color):
     current_x = point[0]
     current_y = point[1]
 
-    d = pix[current_x + 1, current_y]
     while pix[current_x + 1, current_y] != border_color and current_x <= DEFAULT_WIDTH - 1:
         current_x += 1
     current_x += 1

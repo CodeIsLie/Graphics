@@ -16,7 +16,7 @@ def get_borders(points):
 
     points_len = len(points)
     direction = dict()
-    for i in range(len(points)):
+    for i in range(1, len(points)):
         _, y_prev = points[i - 1]
         x, y = points[i]
         _, y_next = points[i+1-points_len]
@@ -84,8 +84,7 @@ def find_holes(borders, image, border_color):
             x_r = points[i+1]
             for x in range(x_l+1, x_r, 1):
                 if pix[x, y] != border_color:
-                    borders[y].add(x) #
-
+                    borders[y].add(x)
 
     return borders
 
