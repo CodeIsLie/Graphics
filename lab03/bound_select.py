@@ -55,12 +55,12 @@ def calc_points(point, border_color):
     start_x = current_x
     start_y = current_y
 
-    res_points_set = [(current_x, current_y)]
+    res_points_set = {(current_x, current_y)}
     current_direction = Direction.Down
 
     for x in get_neighbours(current_direction, (current_x, current_y)):
         if pix[x[0][0], x[0][1]] == border_color:
-            res_points_set.append(x[0])
+            res_points_set.add(x[0])
             current_x = x[0][0]
             current_y = x[0][1]
             current_direction = x[1]
@@ -72,7 +72,7 @@ def calc_points(point, border_color):
             # print('  ', x)
             if pix[x[0][0], x[0][1]] == border_color:
                 # print('    ', x)
-                res_points_set.append(x[0])
+                res_points_set.add(x[0])
                 current_x = x[0][0]
                 current_y = x[0][1]
                 current_direction = x[1]
@@ -91,8 +91,8 @@ def select_borders(event):
 
     border_points = calc_points((start_x, start_y), (0, 0, 0, 255))
 
-    for x, y in border_points:
-        pix[x, y] = (0, 255, 0, 255)
+    for point in border_points:
+        pix[point[0], point[1]] = (0, 255, 0, 255)
 
     # draw.rectangle([1, 1, DEFAULT_WIDTH - 1, DEFAULT_HEIGHT - 1], outline='black')
     canvas.image = ImageTk.PhotoImage(image)

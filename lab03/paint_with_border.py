@@ -2,20 +2,19 @@ from tkinter import *
 from enum import Enum
 # from main import *
 
-def get_borders(point, border_color):
-    points = calc_points(point, border_color)
+def get_borders(points, border_color):
     _, y_coordinates = list(zip(*points))
     minY = min(y_coordinates)
     maxY = max(y_coordinates)
 
     ordered_points = dict()
     for i in range(minY, maxY+1):
-        ordered_points[i] = {}
+        ordered_points[i] = set()
 
     points_len = len(points)
     for i in range(len(points)):
         x, y = points[i]
-        _, y_prev = point[i-1]
+        _, y_prev = points[i-1]
         _, y_next = points[i+1-points_len]
         if not(y_prev < y > y_next or y_prev > y < y_next or y_prev == y == y_next):
             ordered_points[y].add(x)
