@@ -59,11 +59,11 @@ class WorkArea:
         self.draw_button = Button(self.root, text='add point', command=self.use_drawer)
         self.draw_button.grid(row=3, column=0)
 
-        self.draw_button = Button(self.root, text='delete point', command=self.use_drawer)
-        self.draw_button.grid(row=3, column=1)
+        self.del_button = Button(self.root, text='delete point', command=self.remove_point)
+        self.del_button.grid(row=3, column=1)
 
-        self.draw_button = Button(self.root, text='move point', command=self.use_drawer)
-        self.draw_button.grid(row=3, column=2)
+        self.move_button = Button(self.root, text='move point', command=self.use_drawer)
+        self.move_button.grid(row=3, column=2)
 
         self.eraser_button = Button(self.root, text='Clear', command=self.clear_all)
         self.eraser_button.grid(row=3, column=3)
@@ -83,7 +83,6 @@ class WorkArea:
         self.root.mainloop()
 
     def use_drawer(self):
-        self.current_primitive_ind = len(self.point_list)
         self.canvas.bind('<Button-1>', self.add_point)
         self.canvas.bind('<Button-3>', self.stop_drawing)
 
@@ -92,6 +91,22 @@ class WorkArea:
         self.draw.ellipse([event.x-1, event.y-1, event.x+1, event.y+1], fill='red')
         self.canvas.image = ImageTk.PhotoImage(self.image)
         self.canvas.create_image(0, 0, image=self.canvas.image, anchor='nw')
+
+    def remove_point(self):
+        self.canvas.bind('<Button-1>', self.remove)
+        self.canvas.bind('<Button-3>', self.stop_removing)
+
+    def remove(self, event):
+        p_list = self.point_list
+        for i in range(len(p_list)):
+            if abs(event.x - p_list[i][0]) < 3 and abs(event.y - p_list[i][1]) < 3:
+                self.point_list.remove(self.point_list[i])
+                self.redraw_all()
+                return
+
+    def stop_removing(self, event):
+        self.canvas.unbind('<Button-1>')
+        self.canvas.unbind('<Button-3>')
 
     def clear_all(self):
         self.point_list = []
@@ -153,7 +168,6 @@ class WorkArea:
 
         if fictive_point is not None:
             self.point_list.remove(fictive_point)
-
 
     def draw_points(self):
         for x, y in self.point_list:
