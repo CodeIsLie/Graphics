@@ -1,5 +1,6 @@
 from tkinter import *
 from enum import Enum
+from paint_with_border import *
 
 from PIL import Image, ImageTk, ImageDraw
 
@@ -47,8 +48,6 @@ def calc_points(point, border_color):
         current_x += 1
     current_x += 1
 
-    # st = pix[current_x, current_y]
-
     if current_x == DEFAULT_WIDTH:
         return {()}
 
@@ -81,6 +80,21 @@ def calc_points(point, border_color):
     return res_points_set
 
 
+def paint(event):
+    if event.x <= 1 or event.x >= DEFAULT_WIDTH - 1 or event.y <= 1 or event.y >= DEFAULT_HEIGHT - 1:
+        return
+
+    start_x = event.x - 1
+    start_y = event.y - 1
+
+    border_points = calc_points((start_x, start_y), (0, 0, 0))
+    border_points = get_borders(border_points)
+    paint_figure(border_points, image)
+
+    # draw.rectangle([1, 1, DEFAULT_WIDTH - 1, DEFAULT_HEIGHT - 1], outline='black')
+    canvas.image = ImageTk.PhotoImage(image)
+    canvas.create_image(0, 0, image=canvas.image, anchor='nw')
+
 def select_borders(event):
     if event.x <= 1 or event.x >= DEFAULT_WIDTH - 1 or event.y <= 1 or event.y >= DEFAULT_HEIGHT - 1:
         return
@@ -98,7 +112,6 @@ def select_borders(event):
     canvas.image = ImageTk.PhotoImage(image)
     canvas.create_image(0, 0, image=canvas.image, anchor='nw')
 
-
 root = Tk()
 root.title("Border Picker")
 root.resizable(False, False)
@@ -106,12 +119,12 @@ root.resizable(False, False)
 canvas = Canvas(root, bg='white', width=DEFAULT_WIDTH, height=DEFAULT_WIDTH)
 canvas.grid(row=0, columnspan=10)
 
-image = Image.open("in.png")
+image = Image.open("im3.png")
 draw = ImageDraw.Draw(image)
 
 canvas.image = ImageTk.PhotoImage(image)
 canvas.create_image(0, 0, image=canvas.image, anchor='nw')
 
-canvas.bind('<Button-1>', select_borders)
+canvas.bind('<Button-1>', paint)
 
 root.mainloop()
