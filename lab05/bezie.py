@@ -62,7 +62,7 @@ class WorkArea:
         self.del_button = Button(self.root, text='delete point', command=self.remove_point)
         self.del_button.grid(row=3, column=1)
 
-        self.move_button = Button(self.root, text='move point', command=self.use_drawer)
+        self.move_button = Button(self.root, text='move point', command=self.use_mover)
         self.move_button.grid(row=3, column=2)
 
         self.eraser_button = Button(self.root, text='Clear', command=self.clear_all)
@@ -79,6 +79,7 @@ class WorkArea:
         self.point_location_label.grid(row=5, column=4)
 
         self.additional_points = []
+        self.movable_point_ind = None
 
         self.root.mainloop()
 
@@ -118,10 +119,6 @@ class WorkArea:
         # self.canvas.unbind('<Button-1>')
         # self.canvas.unbind('<Button-3>')
         # self.draw_current_primitive()
-
-    # def draw_current_primitive(self):
-    #     self.canvas.image = ImageTk.PhotoImage(self.image)
-    #     self.canvas.create_image(0, 0, image=self.canvas.image, anchor='nw')
 
     def draw_curve(self, curve_points, image_draw, color='black'):
         first_point = curve_points[0]
@@ -191,5 +188,23 @@ class WorkArea:
         self.image = Image.new('RGB', (self.DEFAULT_WIDTH, self.DEFAULT_WIDTH), 'white')
         self.draw = ImageDraw.Draw(self.image)
 
+    def use_mover(self):
+        self.canvas.bind('<Button-1>', self.select_point)
+
+    def select_point(self, event):
+        p_list = self.point_list
+        for i in range(len(p_list)):
+            if abs(event.x - p_list[i][0]) < 3 and abs(event.y - p_list[i][1]) < 3:
+                self.movable_point_ind = i
+                self.canvas.bind('<Button-1>', self.move_point)
+                return
+
+    def move_point(self, event):
+        self.canvas.unbind('<Button-1>')
+        if self.movable_point_ind is None:
+            return
+        self.point_list[self.movable_point_ind] = event.x, event.y
+        self.movable_point_ind = None
+        self.redraw_all()
 
 gui = WorkArea()
