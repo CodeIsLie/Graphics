@@ -10,6 +10,7 @@ import numpy as np
 Преобразования должны быть реализованы матрицами!
 '''
 
+DEFAULT_COLOR='black'
 
 class Edge:
     def __init__(self, points=None):
@@ -98,6 +99,16 @@ class Polyhedron:
 
     def add_edge(self, edge):
         self.edges.append(edge)
+
+    def get_draw_lines(self):
+        return []
+
+    def draw(self, image_draw):
+        lines = self.get_draw_lines()
+        for i in range(len(lines)):
+            x1, y1 = lines[i][0]
+            x2, y2 = lines[i][1]
+            image_draw.line([x1, y1, x2, y2], width=1, fill=DEFAULT_COLOR)
 
     @staticmethod
     def get_cube():

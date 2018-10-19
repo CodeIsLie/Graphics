@@ -4,6 +4,7 @@ from tkinter import filedialog
 
 from PIL import Image, ImageTk, ImageDraw
 
+
 class WorkArea:
 
     DEFAULT_WIDTH = 600
@@ -11,8 +12,8 @@ class WorkArea:
     DEFAULT_COLOR = 'black'
 
     def __init__(self):
-        self.primitive_list = []
-        self.current_primitive_ind = -1
+        self.figure_list = [Polyhedron.get_cube()]
+        # self.current_primitive_ind = -1
 
         self.root = Tk()
         self.root.title("3DPRO")
@@ -20,6 +21,9 @@ class WorkArea:
 
         self.eraser_button = Button(self.root, text='Clear', command=self.use_eraser)
         self.eraser_button.grid(row=3, column=1)
+
+        self.redraw_button = Button(self.root, text='Redraw', command=self.redraw_all)
+        self.redraw_button.grid(row=2, column=1)
 
         self.canvas = Canvas(self.root, bg='white', width=self.DEFAULT_WIDTH, height=self.DEFAULT_WIDTH)
         self.canvas.grid(row=1, columnspan=10)
@@ -71,7 +75,17 @@ class WorkArea:
 
         self.root.mainloop()
 
+    def redraw_all(self):
+        for figure in self.figure_list:
+            figure.draw(self.draw)
+
+        self.canvas.image = ImageTk.PhotoImage(self.image)
+        self.canvas.create_image(0, 0, image=self.canvas.image, anchor='nw')
+
     def use_eraser(self):
-        pass
+        self.canvas.delete("all")
+        self.image = Image.new('RGB', (self.DEFAULT_WIDTH, self.DEFAULT_WIDTH), 'white')
+        self.draw = ImageDraw.Draw(self.image)
+
 
 gui = WorkArea()
