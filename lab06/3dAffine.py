@@ -96,4 +96,26 @@ class Polyhedron:
     def add_edge(self, edge):
         self.edges.append(edge)
 
+    @staticmethod
+    def get_cube():
+        p1 = np.array([0, 0, 0])
+        p2 = np.array([1, 0, 0])
+        p3 = np.array([0, 1, 0])
+        p4 = np.array([0, 0, 1])
+        p5 = np.array([1, 1, 0])
+        p6 = np.array([1, 0, 1])
+        p7 = np.array([0, 1, 1])
+        p8 = np.array([1, 1, 1])
+
+        edges = np.array([
+            [p1, p2, p5, p3],
+            [p1, p2, p6, p4],
+            [p1, p3, p7, p4],
+            [p8, p7, p4, p6],
+            [p8, p7, p3, p5],
+            [p8, p6, p2, p5]
+        ])
+
+        return Polyhedron(edges)
+
 
