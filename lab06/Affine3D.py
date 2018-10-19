@@ -12,8 +12,8 @@ import numpy as np
 
 
 class Edge:
-    def __init__(self, points=[]):
-        self.points = points
+    def __init__(self, points=None):
+        self.points = [] if points is None else points
 
     def add_point(self, point):
         self.points.append(point)
@@ -21,13 +21,16 @@ class Edge:
     def point_count(self):
         return len(self.points)
 
-    def transform(self, matrix):
+    def get_transformed_points(self, matrix):
         new_points = []
         for x, y, z in self.points:
             point_tensor = np.array([x, y, z, 1])
             new_point = np.dot(point_tensor, matrix)[:3]
             new_points.append(new_point)
-        self.points = new_points
+        return new_points
+
+    def transform(self, matrix):
+        self.points = self.get_transformed_points(matrix)
 
     def translate(self, tx, ty, tz):
         translation_matrix = np.array([
