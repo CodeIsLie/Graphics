@@ -28,29 +28,46 @@ class WorkArea:
 
         # Label(self.root, text="Your primitives list: ").grid(row=0, column=12)
 
-        Label(self.root, text="x: ").grid(row=2, column=5)
-        Label(self.root, text="y: ").grid(row=3, column=5)
-        Label(self.root, text="z: ").grid(row=4, column=5)
-        Label(self.root, text="angle: ").grid(row=5, column=5)
+        Label(self.root, text="x: ").grid(row=2, column=2)
+        Label(self.root, text="y: ").grid(row=3, column=2)
+        Label(self.root, text="z: ").grid(row=4, column=2)
+        Label(self.root, text="x_angle: ").grid(row=2, column=5)
+        Label(self.root, text="y_angle: ").grid(row=3, column=5)
+        Label(self.root, text="z_angle: ").grid(row=4, column=5)
 
         self.x_input_box = Entry(self.root)
         self.y_input_box = Entry(self.root)
         self.z_input_box = Entry(self.root)
 
-        self.x_input_box.grid(row=2, column=6)
-        self.y_input_box.grid(row=3, column=6)
+        self.x_input_box.grid(row=2, column=3)
+        self.y_input_box.grid(row=3, column=3)
+        self.z_input_box.grid(row=4, column=3)
 
-        self.angle_input_box = Entry(self.root)
-        self.angle_input_box.grid(row=4, column=6)
+        self.x_angle_input_box = Entry(self.root)
+        self.y_angle_input_box = Entry(self.root)
+        self.z_angle_input_box = Entry(self.root)
+
+        self.x_angle_input_box.grid(row=2, column=6)
+        self.y_angle_input_box.grid(row=3, column=6)
+        self.z_angle_input_box.grid(row=4, column=6)
 
         self.shift_button = Button(self.root, text='Shift') #, command=self.shift_primitive)
-        self.shift_button.grid(row=6, column=5)
+        self.shift_button.grid(row=6, column=1)
 
-        self.scale_button = Button(self.root, text='Scale') #, command=self.scale_primitive)
-        self.scale_button.grid(row=6, column=6)
+        self.scale_button = Button(self.root, text='Scale')
+        self.scale_button.grid(row=6, column=2)
 
-        self.rotate_button = Button(self.root, text='Rotate') #, command=self.rotate_primitive)
-        self.rotate_button.grid(row=6, column=7)
+        self.rotate_button = Button(self.root, text='Rotate')
+        self.rotate_button.grid(row=6, column=3)
+
+        self.rotate_button = Button(self.root, text='Rotate about x')
+        self.rotate_button.grid(row=6, column=4)
+
+        self.rotate_button = Button(self.root, text='Rotate about y')
+        self.rotate_button.grid(row=6, column=5)
+
+        self.rotate_button = Button(self.root, text='Rotate about z')
+        self.rotate_button.grid(row=6, column=6)
 
         self.root.mainloop()
 
