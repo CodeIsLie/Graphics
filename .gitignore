@@ -1,1 +1,4 @@
 lab02/.idea/
+*.xml
+*.iml
+*/.idea
