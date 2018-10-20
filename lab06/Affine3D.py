@@ -12,6 +12,13 @@ import numpy as np
 
 DEFAULT_COLOR = 'black'
 
+
+def point_transform(point, matrix):
+    x, y, z = point
+    point_tensor = np.array([x, y, z, 1])
+    return np.dot(point_tensor, matrix)[:3]
+
+
 class Polygon:
     def __init__(self, points=None):
         self.points = [] if points is None else points
@@ -24,10 +31,8 @@ class Polygon:
 
     def get_transformed_points(self, matrix):
         new_points = []
-        for x, y, z in self.points:
-            point_tensor = np.array([x, y, z, 1])
-            new_point = np.dot(point_tensor, matrix)[:3]
-            new_points.append(new_point)
+        for point in self.points:
+            new_points.append(point_transform(point, matrix))
         return new_points
 
     def transform(self, matrix):
@@ -109,8 +114,9 @@ class Polygon:
 
 # многогранник
 class Polyhedron:
-    def __init__(self, edges=None):
+    def __init__(self, edges=None, center_point=None):
         self.edges = [] if edges is None else edges
+        self.center_point = (0.5, 0.5, 0.5) if center_point is None else center_point
 
     def add_edge(self, edge):
         self.edges.append(edge)

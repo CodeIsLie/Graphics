@@ -31,18 +31,26 @@ class WorkArea:
         self.image = Image.new('RGB', (self.DEFAULT_WIDTH, self.DEFAULT_HEIGHT), 'white')
         self.draw = ImageDraw.Draw(self.image)
 
-        # Label(self.root, text="Your primitives list: ").grid(row=0, column=12)
+        Label(self.root, text="choose your figure: ").grid(row=2, column=7)
+        self.current_figure_var = StringVar(self.root)
+        self.current_figure_var.set("cube")  # default value
+        self.choose_figure_list = OptionMenu(self.root, self.current_figure_var, "cube", "tetraedr", "octaedr")
+        self.choose_figure_list.grid(row=3, column=7)
 
         Label(self.root, text="x: ").grid(row=2, column=2)
         Label(self.root, text="y: ").grid(row=3, column=2)
         Label(self.root, text="z: ").grid(row=4, column=2)
-        Label(self.root, text="x_angle: ").grid(row=2, column=5)
-        Label(self.root, text="y_angle: ").grid(row=3, column=5)
-        Label(self.root, text="z_angle: ").grid(row=4, column=5)
+        Label(self.root, text="x_angle: ").grid(row=2, column=4)
+        Label(self.root, text="y_angle: ").grid(row=3, column=4)
+        Label(self.root, text="z_angle: ").grid(row=4, column=4)
 
         self.x_input_box = Entry(self.root)
         self.y_input_box = Entry(self.root)
         self.z_input_box = Entry(self.root)
+
+        self.x_input_box.insert(0, "100")
+        self.y_input_box.insert(0, "100")
+        self.z_input_box.insert(0, "100")
 
         self.x_input_box.grid(row=2, column=3)
         self.y_input_box.grid(row=3, column=3)
@@ -52,9 +60,13 @@ class WorkArea:
         self.y_angle_input_box = Entry(self.root)
         self.z_angle_input_box = Entry(self.root)
 
-        self.x_angle_input_box.grid(row=2, column=6)
-        self.y_angle_input_box.grid(row=3, column=6)
-        self.z_angle_input_box.grid(row=4, column=6)
+        self.x_angle_input_box.insert(0, "15")
+        self.y_angle_input_box.insert(0, "15")
+        self.z_angle_input_box.insert(0, "15")
+
+        self.x_angle_input_box.grid(row=2, column=5)
+        self.y_angle_input_box.grid(row=3, column=5)
+        self.z_angle_input_box.grid(row=4, column=5)
 
         self.shift_button = Button(self.root, text='Translate', command=self.translate)
         self.shift_button.grid(row=6, column=1)
@@ -120,9 +132,9 @@ class WorkArea:
 
     def rotate_all_axis(self):
         figure = self.figure_list[self.cur_figure_ind]
-        x_angle = self.x_angle_input_box.get()
-        y_angle = self.y_angle_input_box.get()
-        z_angle = self.z_angle_input_box.get()
+        x_angle = float(self.x_angle_input_box.get())
+        y_angle = float(self.y_angle_input_box.get())
+        z_angle = float(self.z_angle_input_box.get())
         figure.rotate_all(x_angle, y_angle, z_angle)
         self.redraw_all()
 
