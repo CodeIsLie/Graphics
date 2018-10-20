@@ -10,9 +10,9 @@ import numpy as np
 Преобразования должны быть реализованы матрицами!
 '''
 
-DEFAULT_COLOR='black'
+DEFAULT_COLOR = 'black'
 
-class Edge:
+class Polygon:
     def __init__(self, points=None):
         self.points = [] if points is None else points
 
@@ -35,10 +35,10 @@ class Edge:
 
     def translate(self, tx, ty, tz):
         translation_matrix = np.array([
-            [1, 0, 0, tx],
-            [0, 1, 0, ty],
-            [0, 0, 1, tz],
-            [0, 0, 0, 1]
+            [1, 0, 0, 0],
+            [0, 1, 0, 0],
+            [0, 0, 1, 0],
+            [tx, ty, tz, 1]
         ])
         self.transform(translation_matrix)
 
@@ -60,7 +60,7 @@ class Edge:
             [0, sin_theta, cos_theta, 0],
             [0, 0, 0, 1]
         ])
-        self.transform(rotation_matrix)
+        self.transform(rotation_matrix.transpose())
 
     def rotate_y_axis(self, theta):
         cos_theta = np.cos(theta)
@@ -71,7 +71,7 @@ class Edge:
             [-sin_theta, 0, cos_theta, 0],
             [0, 0, 0, 1]
         ])
-        self.transform(rotation_matrix)
+        self.transform(rotation_matrix.transpose())
 
     def rotate_z_axis(self, theta):
         cos_theta = np.cos(theta)
@@ -82,7 +82,22 @@ class Edge:
             [0, 0, 1, 0],
             [0, 0, 0, 1]
         ])
-        self.transform(rotation_matrix)
+        self.transform(rotation_matrix.transpose())
+
+    def to_2D(self, fov_h, fov_w, z_n, z_f):
+        w = 1 / np.tan(fov_w / 2)
+        h = 1 / np.tan(fov_h / 2)
+        q = z_f / (z_f - z_n)
+        matrix = np.array([
+            [w, 0, 0, 0],
+            [0, h, 0, 0],
+            [0, 0, q, 1],
+            [0, 0, -q * z_n, 0]
+        ])
+        points = self.get_transformed_points(matrix)
+        points = [x[:2] for x in points]
+        lines = list(zip(points, [points[-1]]+points[0:-1]))
+        return lines
 
     def __str__(self):
         s = ""
@@ -101,10 +116,33 @@ class Polyhedron:
         self.edges.append(edge)
 
     def get_draw_lines(self):
-        return []
+        res = []
+        for edge in self.edges:
+            res += edge.to_2D(90, 90, 300, 1000)
+        return res
+
+    def translate(self, dx, dy, dz):
+        for edge in self.edges:
+            edge.translate(dx, dy, dz)
+
+    def scale(self, dx, dy, dz):
+        for edge in self.edges:
+            edge.scale(dx, dy, dz)
+
+    def rotate_all(self, angle_x, angle_y, angle_z):
+        for edge in self.edges:
+            edge.rotate_x_axis(angle_x * np.pi/180)
+            edge.rotate_y_axis(angle_y * np.pi/180)
+            edge.rotate_z_axis(angle_z * np.pi/180)
 
     def draw(self, image_draw):
+        # TODO: remove this from draw
+        self.scale(100, 100, 100)
+        self.rotate_all(30, 30, 30)
+        self.translate(160, 160, 160)
+
         lines = self.get_draw_lines()
+
         for i in range(len(lines)):
             x1, y1 = lines[i][0]
             x2, y2 = lines[i][1]
@@ -121,14 +159,15 @@ class Polyhedron:
         p7 = np.array([0, 1, 1])
         p8 = np.array([1, 1, 1])
 
-        edges = np.array([
+        edge_points = [
             [p1, p2, p5, p3],
             [p1, p2, p6, p4],
             [p1, p3, p7, p4],
             [p8, p7, p4, p6],
             [p8, p7, p3, p5],
             [p8, p6, p2, p5]
-        ])
+        ]
+        edges = [Polygon(points) for points in edge_points]
 
         return Polyhedron(edges)
 
