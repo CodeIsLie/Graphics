@@ -125,9 +125,9 @@ class Polyhedron:
         for edge in self.edges:
             edge.translate(dx, dy, dz)
 
-    def scale(self, dx, dy, dz):
+    def scale(self, mx, my, mz):
         for edge in self.edges:
-            edge.scale(dx, dy, dz)
+            edge.scale(mx, my, mz)
 
     def rotate_all(self, angle_x, angle_y, angle_z):
         for edge in self.edges:
@@ -136,11 +136,6 @@ class Polyhedron:
             edge.rotate_z_axis(angle_z * np.pi/180)
 
     def draw(self, image_draw):
-        # TODO: remove this from draw
-        self.scale(100, 100, 100)
-        self.rotate_all(30, 30, 30)
-        self.translate(160, 160, 160)
-
         lines = self.get_draw_lines()
 
         for i in range(len(lines)):
