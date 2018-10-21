@@ -1,3 +1,5 @@
+import math
+
 import numpy as np
 
 '''
@@ -55,6 +57,17 @@ class Polygon:
             [0, 0, 0, 1]
         ])
         self.transform(scale_matrix)
+
+    def rotate_about_vector(self, theta, l, m, n):
+        cos_theta = np.cos(theta)
+        sin_theta = np.sin(theta)
+        rotation_matrix = np.array([
+            [l**2 + cos_theta*(1 - l**2),     l*(1 - cos_theta)*m + n*sin_theta, l*(1-cos_theta)*n - m*sin_theta, 0],
+            [l*(1-cos_theta)*m - n*sin_theta, m**2 + cos_theta*(1-m**2), m*(1-cos_theta)*n + l*sin_theta, 0],
+            [l*(1-cos_theta)*n + m*sin_theta, m*(1-cos_theta)*n - l*sin_theta,  n**2 + cos_theta*(1-n**2), 0],
+            [0, 0, 0, 1]
+        ])
+        self.transform(rotation_matrix.transpose())
 
     def rotate_x_axis(self, theta):
         cos_theta = np.cos(theta)
@@ -144,9 +157,9 @@ class Polyhedron:
         old_center = self.center_point
         self.scale(mx, my, mz)
         self.translate(
-            -1*abs(self.center_point[0] - old_center[0]),
-            -1*abs(self.center_point[1] - old_center[1]),
-            -1*abs(self.center_point[2] - old_center[2]))
+            -(self.center_point[0] - old_center[0]),
+            -(self.center_point[1] - old_center[1]),
+            -(self.center_point[2] - old_center[2]))
         print(self.center_point)
 
     def scale(self, mx, my, mz):
@@ -161,41 +174,66 @@ class Polyhedron:
         ])
         self.center_point = point_transform(self.center_point, scale_matrix)
 
+    def rotate_about_vector(self, theta, x, y, z, x1, y1, z1):
+        l = x1 - x
+        m = y1 - y
+        n = z1 - z
+        length = math.sqrt(l**2 + m**2 + n**2)
+        l = l/length
+        m = m/length
+        n = n/length
+
+        for edge in self.edges:
+            edge.rotate_about_vector(theta * np.pi/180, l, m, n)
+
+        cos_theta = np.cos(theta * np.pi/180)
+        sin_theta = np.sin(theta * np.pi/180)
+        rotation_matrix = np.array([
+            [l ** 2 + cos_theta * (1 - l ** 2), l * (1 - cos_theta) * m + n * sin_theta,
+             l * (1 - cos_theta) * n - m * sin_theta, 0],
+            [l * (1 - cos_theta) * m - n * sin_theta, m ** 2 + cos_theta * (1 - m ** 2),
+             m * (1 - cos_theta) * n + l * sin_theta, 0],
+            [l * (1 - cos_theta) * n + m * sin_theta, m * (1 - cos_theta) * n - l * sin_theta,
+             n ** 2 + cos_theta * (1 - n ** 2), 0],
+            [0, 0, 0, 1]
+        ])
+        self.center_point = point_transform(self.center_point, rotation_matrix.transpose())
+
     def rotate_all(self, angle_x, angle_y, angle_z):
         for edge in self.edges:
             edge.rotate_x_axis(angle_x * np.pi/180)
             edge.rotate_y_axis(angle_y * np.pi/180)
             edge.rotate_z_axis(angle_z * np.pi/180)
-        #
-        # cos_theta_x = np.cos(angle_x)
-        # sin_theta_y = np.sin(angle_x)
-        # rotation_matrix_x = np.array([
-        #     [1, 0, 0, 0],
-        #     [0, cos_theta_x, -sin_theta_y, 0],
-        #     [0, sin_theta_y, cos_theta_x, 0],
-        #     [0, 0, 0, 1]
-        # ])
-        # self.center_point = point_transform(self.center_point, rotation_matrix_x)
-        #
-        # cos_theta_y = np.cos(angle_y)
-        # sin_theta_y = np.sin(angle_y)
-        # rotation_matrix_y = np.array([
-        #     [cos_theta_y, 0, sin_theta_y, 0],
-        #     [0, 1, 0, 0],
-        #     [-sin_theta_y, 0, cos_theta_y, 0],
-        #     [0, 0, 0, 1]
-        # ])
-        # self.center_point = point_transform(self.center_point, rotation_matrix_y)
-        #
-        # cos_theta_z = np.cos(angle_z)
-        # sin_theta_z = np.sin(angle_z)
-        # rotation_matrix_z = np.array([
-        #     [cos_theta_z, -sin_theta_z, 0, 0],
-        #     [sin_theta_z, cos_theta_z, 0, 0],
-        #     [0, 0, 1, 0],
-        #     [0, 0, 0, 1]
-        # ])
-        # self.center_point = point_transform(self.center_point, rotation_matrix_z)
+
+        cos_theta_x = np.cos(angle_x * np.pi/180)
+        sin_theta_x = np.sin(angle_x * np.pi/180)
+        rotation_matrix_x = np.array([
+            [1, 0, 0, 0],
+            [0, cos_theta_x, -sin_theta_x, 0],
+            [0, sin_theta_x, cos_theta_x, 0],
+            [0, 0, 0, 1]
+        ])
+        self.center_point = point_transform(self.center_point, rotation_matrix_x.transpose())
+
+        cos_theta_y = np.cos(angle_y * np.pi/180)
+        sin_theta_y = np.sin(angle_y * np.pi/180)
+        rotation_matrix_y = np.array([
+            [cos_theta_y, 0, sin_theta_y, 0],
+            [0, 1, 0, 0],
+            [-sin_theta_y, 0, cos_theta_y, 0],
+            [0, 0, 0, 1]
+        ])
+        self.center_point = point_transform(self.center_point, rotation_matrix_y.transpose())
+
+        cos_theta_z = np.cos(angle_z * np.pi/180)
+        sin_theta_z = np.sin(angle_z * np.pi/180)
+        rotation_matrix_z = np.array([
+            [cos_theta_z, -sin_theta_z, 0, 0],
+            [sin_theta_z, cos_theta_z, 0, 0],
+            [0, 0, 1, 0],
+            [0, 0, 0, 1]
+        ])
+        self.center_point = point_transform(self.center_point, rotation_matrix_z.transpose())
 
     def draw(self, image_draw):
         lines = self.get_draw_lines()

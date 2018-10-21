@@ -86,8 +86,27 @@ class WorkArea:
         self.rotate_z_button = Button(self.root, text='Rotate about z', command=self.rotate_z_axis)
         self.rotate_z_button.grid(row=6, column=6)
 
+        self.rotate_button = Button(self.root, text='Rotate about vector', command=self.rotate_about_vector)
+        self.rotate_button.grid(row=7, column=3)
+
         self.center_scale_button = Button(self.root, text='Center Scale', command=self.center_scale)
         self.center_scale_button.grid(row=7, column=2)
+
+        self.x1_input_box = Entry(self.root)
+        self.y1_input_box = Entry(self.root)
+        self.z1_input_box = Entry(self.root)
+
+        self.x1_input_box.insert(0, "1")
+        self.y1_input_box.insert(0, "1")
+        self.z1_input_box.insert(0, "1")
+
+        self.x1_input_box.grid(row=8, column=3)
+        self.y1_input_box.grid(row=9, column=3)
+        self.z1_input_box.grid(row=10, column=3)
+
+        Label(self.root, text="x1: ").grid(row=8, column=2)
+        Label(self.root, text="y1: ").grid(row=9, column=2)
+        Label(self.root, text="z1: ").grid(row=10, column=2)
 
         self.root.mainloop()
 
@@ -116,6 +135,19 @@ class WorkArea:
         mz = float(self.z_input_box.get())
         figure.scale(mx, my, mz)
         print("success scale mx={} my={} mz={}".format(mx, my, mz))
+        self.redraw_all()
+
+    def rotate_about_vector(self):
+        figure = self.figure_list[self.cur_figure_ind]
+        x = float(self.x_input_box.get())
+        y = float(self.y_input_box.get())
+        z = float(self.z_input_box.get())
+
+        x1 = float(self.x1_input_box.get())
+        y1 = float(self.y1_input_box.get())
+        z1 = float(self.z1_input_box.get())
+
+        figure.rotate_about_vector(45, x, y, z, x1, y1, z1)
         self.redraw_all()
 
     def rotate_x_axis(self):
