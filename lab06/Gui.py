@@ -86,6 +86,9 @@ class WorkArea:
         self.rotate_z_button = Button(self.root, text='Rotate about z', command=self.rotate_z_axis)
         self.rotate_z_button.grid(row=6, column=6)
 
+        self.center_scale_button = Button(self.root, text='Center Scale', command=self.center_scale)
+        self.center_scale_button.grid(row=7, column=2)
+
         self.root.mainloop()
 
     def translate(self):
@@ -95,6 +98,15 @@ class WorkArea:
         dz = float(self.z_input_box.get())
         figure.translate(dx, dy, dz)
         print("success translate dx={} dy={} dz={}".format(dx, dy, dz))
+        self.redraw_all()
+
+    def center_scale(self):
+        figure = self.figure_list[self.cur_figure_ind]
+        mx = float(self.x_input_box.get())
+        my = float(self.y_input_box.get())
+        mz = float(self.z_input_box.get())
+        figure.center_scale(mx, my, mz)
+        print("success center scale mx={} my={} mz={}".format(mx, my, mz))
         self.redraw_all()
 
     def scale(self):
