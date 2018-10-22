@@ -108,7 +108,25 @@ class WorkArea:
         Label(self.root, text="y1: ").grid(row=9, column=2)
         Label(self.root, text="z1: ").grid(row=10, column=2)
 
+        self.mirror_button = Button(self.root, text='Mirror', command=self.mirror)
+        self.mirror_button.grid(row=7, column=4)
+
+        self.xoy_check_box = IntVar()
+        Checkbutton(self.root, text="XOY", variable=self.xoy_check_box).grid(row=8, column=4)
+        self.yoz_check_box = IntVar()
+        Checkbutton(self.root, text="YOZ", variable=self.yoz_check_box).grid(row=9, column=4)
+        self.zox_check_box = IntVar()
+        Checkbutton(self.root, text="ZOX", variable=self.zox_check_box).grid(row=10, column=4)
         self.root.mainloop()
+
+    def mirror(self):
+        figure = self.figure_list[self.cur_figure_ind]
+        xoy = self.xoy_check_box.get()
+        yoz = self.yoz_check_box.get()
+        zox = self.zox_check_box.get()
+        figure.mirror(xoy, yoz, zox)
+        self.redraw_all()
+
 
     def translate(self):
         figure = self.figure_list[self.cur_figure_ind]

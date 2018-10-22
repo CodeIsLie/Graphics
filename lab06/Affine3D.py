@@ -102,6 +102,34 @@ class Polygon:
         ])
         self.transform(rotation_matrix.transpose())
 
+    def mirror(self, xoy, yoz, zox):
+        if xoy:
+            xoy_matrix = np.array([
+                [1, 0,  0, 0],
+                [0, 1,  0, 0],
+                [0, 0, -1, 0],
+                [0, 0,  0, 1]
+            ])
+            self.transform(xoy_matrix)
+
+        if yoz:
+            yoz_matrix = np.array([
+                [-1, 0,  0, 0],
+                [ 0, 1,  0, 0],
+                [ 0, 0,  1, 0],
+                [ 0, 0,  0, 1]
+            ])
+            self.transform(yoz_matrix)
+
+        if zox:
+            zox_matrix = np.array([
+                [1,  0,  0, 0],
+                [0, -1,  0, 0],
+                [0,  0,  1, 0],
+                [0,  0,  0, 1]
+            ])
+            self.transform(zox_matrix)
+
     def to_2D(self, fov_h, fov_w, z_n, z_f):
         w = 1 / np.tan(fov_w / 2)
         h = 1 / np.tan(fov_h / 2)
@@ -242,6 +270,38 @@ class Polyhedron:
             x1, y1 = lines[i][0]
             x2, y2 = lines[i][1]
             image_draw.line([x1, y1, x2, y2], width=1, fill=DEFAULT_COLOR)
+
+    def mirror(self, xoy, yoz, zox):
+        for edge in self.edges:
+            edge.mirror(xoy, yoz, zox)
+        print("mirroring: center = ", self.center_point)
+        if xoy:
+            xoy_matrix = np.array([
+                [1, 0,  0, 0],
+                [0, 1,  0, 0],
+                [0, 0, -1, 0],
+                [0, 0,  0, 1]
+            ])
+            self.center_point = point_transform(self.center_point, xoy_matrix)
+
+        if yoz:
+            yoz_matrix = np.array([
+                [-1, 0,  0, 0],
+                [ 0, 1,  0, 0],
+                [ 0, 0,  1, 0],
+                [ 0, 0,  0, 1]
+            ])
+            self.center_point = point_transform(self.center_point, yoz_matrix)
+
+        if zox:
+            zox_matrix = np.array([
+                [1,  0,  0, 0],
+                [0, -1,  0, 0],
+                [0,  0,  1, 0],
+                [0,  0,  0, 1]
+            ])
+            self.center_point = point_transform(self.center_point, zox_matrix)
+        print("success: center = ", self.center_point)
 
     @staticmethod
     def get_cube():
