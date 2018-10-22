@@ -19,7 +19,8 @@ class WorkArea:
         self.eraser_button = Button(self.root, text='Clear', command=self.erase)
         self.eraser_button.grid(row=3, column=1)
 
-        self.triangulation_button = Button(self.root, text='make triangulation') #, command=self.redraw_all)
+        self.triangulation_button = Button(self.root, text='make triangulation',
+                                           command=self.draw_triangulation) #, command=self.redraw_all)
         self.triangulation_button.grid(row=3, column=3)
 
         self.canvas = Canvas(self.root, bg='white', width=self.DEFAULT_WIDTH, height=self.DEFAULT_WIDTH)
@@ -38,6 +39,14 @@ class WorkArea:
         y = event.y
         self.add_point(x, y)
         self.redraw_all()
+
+    def draw_triangulation(self):
+        triangl_edges = delone(self.point_list)
+        for p1, p2 in triangl_edges:
+            self.draw.line([p1[0], p1[1], p2[0], p2[1]], fill='black')
+
+        self.canvas.image = ImageTk.PhotoImage(self.image)
+        self.canvas.create_image(0, 0, image=self.canvas.image, anchor='nw')
 
     def erase(self):
         self.point_list = []
