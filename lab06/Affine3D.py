@@ -203,6 +203,7 @@ class Polyhedron:
         self.center_point = point_transform(self.center_point, scale_matrix)
 
     def rotate_about_vector(self, theta, x, y, z, x1, y1, z1):
+        print("rotating about vector: center = ", self.center_point)
         l = x1 - x
         m = y1 - y
         n = z1 - z
@@ -210,6 +211,8 @@ class Polyhedron:
         l = l/length
         m = m/length
         n = n/length
+
+        self.translate(-x, -y, -z)
 
         for edge in self.edges:
             edge.rotate_about_vector(theta * np.pi/180, l, m, n)
@@ -226,6 +229,10 @@ class Polyhedron:
             [0, 0, 0, 1]
         ])
         self.center_point = point_transform(self.center_point, rotation_matrix.transpose())
+
+        self.translate(x, y, z)
+
+        print("success: center = ", self.center_point)
 
     def rotate_all(self, angle_x, angle_y, angle_z):
         for edge in self.edges:

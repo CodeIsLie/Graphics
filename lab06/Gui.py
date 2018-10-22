@@ -96,9 +96,9 @@ class WorkArea:
         self.y1_input_box = Entry(self.root)
         self.z1_input_box = Entry(self.root)
 
-        self.x1_input_box.insert(0, "1")
-        self.y1_input_box.insert(0, "1")
-        self.z1_input_box.insert(0, "1")
+        self.x1_input_box.insert(0, "120")
+        self.y1_input_box.insert(0, "120")
+        self.z1_input_box.insert(0, "120")
 
         self.x1_input_box.grid(row=8, column=3)
         self.y1_input_box.grid(row=9, column=3)
@@ -108,15 +108,30 @@ class WorkArea:
         Label(self.root, text="y1: ").grid(row=9, column=2)
         Label(self.root, text="z1: ").grid(row=10, column=2)
 
+        Label(self.root, text="angle: ").grid(row=8, column=4)
+        self.angle_input_box = Entry(self.root)
+        self.angle_input_box.insert(0, "45")
+        self.angle_input_box.grid(row=9, column=4)
+
         self.mirror_button = Button(self.root, text='Mirror', command=self.mirror)
-        self.mirror_button.grid(row=7, column=4)
+        self.mirror_button.grid(row=7, column=7)
 
         self.xoy_check_box = IntVar()
-        Checkbutton(self.root, text="XOY", variable=self.xoy_check_box).grid(row=8, column=4)
+        Checkbutton(self.root, text="XOY", variable=self.xoy_check_box).grid(row=8, column=7)
         self.yoz_check_box = IntVar()
-        Checkbutton(self.root, text="YOZ", variable=self.yoz_check_box).grid(row=9, column=4)
+        Checkbutton(self.root, text="YOZ", variable=self.yoz_check_box).grid(row=9, column=7)
         self.zox_check_box = IntVar()
-        Checkbutton(self.root, text="ZOX", variable=self.zox_check_box).grid(row=10, column=4)
+        Checkbutton(self.root, text="ZOX", variable=self.zox_check_box).grid(row=10, column=7)
+
+        self.rotate_x_center_button = Button(self.root, text='Rotate about center x', command=self.rotate_x_center)
+        self.rotate_x_center_button.grid(row=7, column=4)
+
+        self.rotate_y_center_button = Button(self.root, text='Rotate about center y', command=self.rotate_y_center)
+        self.rotate_y_center_button.grid(row=7, column=5)
+
+        self.rotate_z_center_button = Button(self.root, text='Rotate about center z', command=self.rotate_z_center)
+        self.rotate_z_center_button.grid(row=7, column=6)
+
         self.root.mainloop()
 
     def mirror(self):
@@ -126,7 +141,6 @@ class WorkArea:
         zox = self.zox_check_box.get()
         figure.mirror(xoy, yoz, zox)
         self.redraw_all()
-
 
     def translate(self):
         figure = self.figure_list[self.cur_figure_ind]
@@ -155,6 +169,39 @@ class WorkArea:
         print("success scale mx={} my={} mz={}".format(mx, my, mz))
         self.redraw_all()
 
+    def rotate_x_center(self):
+        figure = self.figure_list[self.cur_figure_ind]
+        angle_value = self.angle_input_box.get()
+        if len(angle_value) == 0:
+            return
+        x = figure.center_point[0]
+        y = figure.center_point[1]
+        z = figure.center_point[2]
+        figure.rotate_about_vector(float(angle_value), x, y, z, x + 10, y, z)
+        self.redraw_all()
+
+    def rotate_y_center(self):
+        figure = self.figure_list[self.cur_figure_ind]
+        angle_value = self.angle_input_box.get()
+        if len(angle_value) == 0:
+            return
+        x = figure.center_point[0]
+        y = figure.center_point[1]
+        z = figure.center_point[2]
+        figure.rotate_about_vector(float(angle_value), x, y, z, x, y + 10, z)
+        self.redraw_all()
+
+    def rotate_z_center(self):
+        figure = self.figure_list[self.cur_figure_ind]
+        angle_value = self.angle_input_box.get()
+        if len(angle_value) == 0:
+            return
+        x = figure.center_point[0]
+        y = figure.center_point[1]
+        z = figure.center_point[2]
+        figure.rotate_about_vector(float(angle_value), x, y, z, x, y, z + 10)
+        self.redraw_all()
+
     def rotate_about_vector(self):
         figure = self.figure_list[self.cur_figure_ind]
         x = float(self.x_input_box.get())
@@ -165,7 +212,9 @@ class WorkArea:
         y1 = float(self.y1_input_box.get())
         z1 = float(self.z1_input_box.get())
 
-        figure.rotate_about_vector(45, x, y, z, x1, y1, z1)
+        angle_value = self.angle_input_box.get()
+
+        figure.rotate_about_vector(float(angle_value), x, y, z, x1, y1, z1)
         self.redraw_all()
 
     def rotate_x_axis(self):
