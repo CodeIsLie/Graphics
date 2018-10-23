@@ -1,3 +1,5 @@
+import math
+
 import numpy as np
 
 '''
@@ -12,7 +14,14 @@ import numpy as np
 
 DEFAULT_COLOR = 'black'
 
-class Edge:
+
+def point_transform(point, matrix):
+    x, y, z = point
+    point_tensor = np.array([x, y, z, 1])
+    return np.dot(point_tensor, matrix)[:3]
+
+
+class Polygon:
     def __init__(self, points=None):
         self.points = [] if points is None else points
 
@@ -24,10 +33,8 @@ class Edge:
 
     def get_transformed_points(self, matrix):
         new_points = []
-        for x, y, z in self.points:
-            point_tensor = np.array([x, y, z, 1])
-            new_point = np.dot(point_tensor, matrix)[:3]
-            new_points.append(new_point)
+        for point in self.points:
+            new_points.append(point_transform(point, matrix))
         return new_points
 
     def transform(self, matrix):
@@ -50,6 +57,17 @@ class Edge:
             [0, 0, 0, 1]
         ])
         self.transform(scale_matrix)
+
+    def rotate_about_vector(self, theta, l, m, n):
+        cos_theta = np.cos(theta)
+        sin_theta = np.sin(theta)
+        rotation_matrix = np.array([
+            [l**2 + cos_theta*(1 - l**2),     l*(1 - cos_theta)*m + n*sin_theta, l*(1-cos_theta)*n - m*sin_theta, 0],
+            [l*(1-cos_theta)*m - n*sin_theta, m**2 + cos_theta*(1-m**2), m*(1-cos_theta)*n + l*sin_theta, 0],
+            [l*(1-cos_theta)*n + m*sin_theta, m*(1-cos_theta)*n - l*sin_theta,  n**2 + cos_theta*(1-n**2), 0],
+            [0, 0, 0, 1]
+        ])
+        self.transform(rotation_matrix.transpose())
 
     def rotate_x_axis(self, theta):
         cos_theta = np.cos(theta)
@@ -84,6 +102,34 @@ class Edge:
         ])
         self.transform(rotation_matrix.transpose())
 
+    def mirror(self, xoy, yoz, zox):
+        if xoy:
+            xoy_matrix = np.array([
+                [1, 0,  0, 0],
+                [0, 1,  0, 0],
+                [0, 0, -1, 0],
+                [0, 0,  0, 1]
+            ])
+            self.transform(xoy_matrix)
+
+        if yoz:
+            yoz_matrix = np.array([
+                [-1, 0,  0, 0],
+                [ 0, 1,  0, 0],
+                [ 0, 0,  1, 0],
+                [ 0, 0,  0, 1]
+            ])
+            self.transform(yoz_matrix)
+
+        if zox:
+            zox_matrix = np.array([
+                [1,  0,  0, 0],
+                [0, -1,  0, 0],
+                [0,  0,  1, 0],
+                [0,  0,  0, 1]
+            ])
+            self.transform(zox_matrix)
+
     def to_2D(self, fov_h, fov_w, z_n, z_f):
         w = 1 / np.tan(fov_w / 2)
         h = 1 / np.tan(fov_h / 2)
@@ -109,8 +155,9 @@ class Edge:
 
 # многогранник
 class Polyhedron:
-    def __init__(self, edges=None):
+    def __init__(self, edges=None, center_point=None):
         self.edges = [] if edges is None else edges
+        self.center_point = (0.5, 0.5, 0.5) if center_point is None else center_point
 
     def add_edge(self, edge):
         self.edges.append(edge)
@@ -125,9 +172,67 @@ class Polyhedron:
         for edge in self.edges:
             edge.translate(dx, dy, dz)
 
-    def scale(self, dx, dy, dz):
+        translation_matrix = np.array([
+            [1, 0, 0, 0],
+            [0, 1, 0, 0],
+            [0, 0, 1, 0],
+            [dx, dy, dz, 1]
+        ])
+        self.center_point = point_transform(self.center_point, translation_matrix)
+
+    def center_scale(self, mx, my, mz):
+        print(self.center_point)
+        old_center = self.center_point
+        self.scale(mx, my, mz)
+        self.translate(
+            -(self.center_point[0] - old_center[0]),
+            -(self.center_point[1] - old_center[1]),
+            -(self.center_point[2] - old_center[2]))
+        print(self.center_point)
+
+    def scale(self, mx, my, mz):
         for edge in self.edges:
-            edge.scale(dx, dy, dz)
+            edge.scale(mx, my, mz)
+
+        scale_matrix = np.array([
+            [mx, 0, 0, 0],
+            [0, my, 0, 0],
+            [0, 0, mz, 0],
+            [0, 0, 0, 1]
+        ])
+        self.center_point = point_transform(self.center_point, scale_matrix)
+
+    def rotate_about_vector(self, theta, x, y, z, x1, y1, z1):
+        print("rotating about vector: center = ", self.center_point)
+        l = x1 - x
+        m = y1 - y
+        n = z1 - z
+        length = math.sqrt(l**2 + m**2 + n**2)
+        l = l/length
+        m = m/length
+        n = n/length
+
+        self.translate(-x, -y, -z)
+
+        for edge in self.edges:
+            edge.rotate_about_vector(theta * np.pi/180, l, m, n)
+
+        cos_theta = np.cos(theta * np.pi/180)
+        sin_theta = np.sin(theta * np.pi/180)
+        rotation_matrix = np.array([
+            [l ** 2 + cos_theta * (1 - l ** 2), l * (1 - cos_theta) * m + n * sin_theta,
+             l * (1 - cos_theta) * n - m * sin_theta, 0],
+            [l * (1 - cos_theta) * m - n * sin_theta, m ** 2 + cos_theta * (1 - m ** 2),
+             m * (1 - cos_theta) * n + l * sin_theta, 0],
+            [l * (1 - cos_theta) * n + m * sin_theta, m * (1 - cos_theta) * n - l * sin_theta,
+             n ** 2 + cos_theta * (1 - n ** 2), 0],
+            [0, 0, 0, 1]
+        ])
+        self.center_point = point_transform(self.center_point, rotation_matrix.transpose())
+
+        self.translate(x, y, z)
+
+        print("success: center = ", self.center_point)
 
     def rotate_all(self, angle_x, angle_y, angle_z):
         for edge in self.edges:
@@ -135,19 +240,75 @@ class Polyhedron:
             edge.rotate_y_axis(angle_y * np.pi/180)
             edge.rotate_z_axis(angle_z * np.pi/180)
 
-    def draw(self, image_draw):
-        # TODO: remove this from draw
-        self.scale(100, 100, 100)
-        self.rotate_all(30, 30, 30)
-        self.translate(160, 160, 160)
+        cos_theta_x = np.cos(angle_x * np.pi/180)
+        sin_theta_x = np.sin(angle_x * np.pi/180)
+        rotation_matrix_x = np.array([
+            [1, 0, 0, 0],
+            [0, cos_theta_x, -sin_theta_x, 0],
+            [0, sin_theta_x, cos_theta_x, 0],
+            [0, 0, 0, 1]
+        ])
+        self.center_point = point_transform(self.center_point, rotation_matrix_x.transpose())
 
+        cos_theta_y = np.cos(angle_y * np.pi/180)
+        sin_theta_y = np.sin(angle_y * np.pi/180)
+        rotation_matrix_y = np.array([
+            [cos_theta_y, 0, sin_theta_y, 0],
+            [0, 1, 0, 0],
+            [-sin_theta_y, 0, cos_theta_y, 0],
+            [0, 0, 0, 1]
+        ])
+        self.center_point = point_transform(self.center_point, rotation_matrix_y.transpose())
+
+        cos_theta_z = np.cos(angle_z * np.pi/180)
+        sin_theta_z = np.sin(angle_z * np.pi/180)
+        rotation_matrix_z = np.array([
+            [cos_theta_z, -sin_theta_z, 0, 0],
+            [sin_theta_z, cos_theta_z, 0, 0],
+            [0, 0, 1, 0],
+            [0, 0, 0, 1]
+        ])
+        self.center_point = point_transform(self.center_point, rotation_matrix_z.transpose())
+
+    def draw(self, image_draw):
         lines = self.get_draw_lines()
-        # for edge in self.edges:
 
         for i in range(len(lines)):
             x1, y1 = lines[i][0]
             x2, y2 = lines[i][1]
             image_draw.line([x1, y1, x2, y2], width=1, fill=DEFAULT_COLOR)
+
+    def mirror(self, xoy, yoz, zox):
+        for edge in self.edges:
+            edge.mirror(xoy, yoz, zox)
+        print("mirroring: center = ", self.center_point)
+        if xoy:
+            xoy_matrix = np.array([
+                [1, 0,  0, 0],
+                [0, 1,  0, 0],
+                [0, 0, -1, 0],
+                [0, 0,  0, 1]
+            ])
+            self.center_point = point_transform(self.center_point, xoy_matrix)
+
+        if yoz:
+            yoz_matrix = np.array([
+                [-1, 0,  0, 0],
+                [ 0, 1,  0, 0],
+                [ 0, 0,  1, 0],
+                [ 0, 0,  0, 1]
+            ])
+            self.center_point = point_transform(self.center_point, yoz_matrix)
+
+        if zox:
+            zox_matrix = np.array([
+                [1,  0,  0, 0],
+                [0, -1,  0, 0],
+                [0,  0,  1, 0],
+                [0,  0,  0, 1]
+            ])
+            self.center_point = point_transform(self.center_point, zox_matrix)
+        print("success: center = ", self.center_point)
 
     @staticmethod
     def get_cube():
@@ -168,7 +329,7 @@ class Polyhedron:
             [p8, p7, p3, p5],
             [p8, p6, p2, p5]
         ]
-        edges = [Edge(points) for points in edge_points]
+        edges = [Polygon(points) for points in edge_points]
 
         return Polyhedron(edges)
 
