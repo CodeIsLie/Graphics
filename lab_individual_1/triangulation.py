@@ -1,5 +1,8 @@
 import math
+import time
 from enum import Enum
+
+
 class Direction(Enum):
     LEFT = 1
     RIGHT = 2
@@ -86,8 +89,6 @@ def calc_radius(p1, p2, p3):
 
 def delone(points):
     triangles = []
-    sleep_edges = []
-    dead_edges = []
     live_edges = set()
 
     first_edge = get_first_edge(points)
@@ -99,29 +100,36 @@ def delone(points):
     edges = [first_edge]
     live_edges.add(first_edge)
 
-    edge = first_edge
-    p1, p2 = edge
-    min_radius = 1e+10
-    new_point = (-1, -1)
-    for p in points:
-        if point_arrangement(edge, p) != Direction.RIGHT:
-            print("point {} outside line {}".format(p, edge))
+    while len(live_edges) > 0:
+        edge = live_edges.pop()
+        p1, p2 = edge
+        min_radius = 1e+10
+        new_point = (-1, -1)
+        for p in points:
+            if point_arrangement(edge, p) != Direction.RIGHT:
+                # print("point {} outside line {}".format(p, edge))
+                continue
+            radius = calc_radius(p1, p2, p)
+            if radius < min_radius:
+                min_radius = radius
+                new_point = p
+
+        edges.append(edge)
+        if new_point == (-1, -1):
             continue
-        radius = calc_radius(p1, p2, p)
-        if radius < min_radius:
-            min_radius = radius
-            new_point = p
-    edge1 = p1, new_point
-    edge2 = p2, new_point
+        edge1 = p1, new_point
+        edge2 = new_point, p2
 
-    for edge in (edge1, edge2):
-        if edge in live_edges:
-            edges.append(edge)
-            live_edges.remove(edge)
-        else:
-            live_edges.add(edge)
+        for edge in (edge1, edge2):
+            if edge in live_edges in live_edges:
+                edges.append(edge)
+                live_edges.remove(edge)
+            elif (edge[1], edge[0]) in live_edges:
+                edges.append((edge[1], edge[0]))
+                live_edges.remove((edge[1], edge[0]))
+            else:
+                live_edges.add(edge)
 
-    edges.extend(live_edges)
-
+    print("size of edges: {}".format(len(edges)))
     return edges
 
