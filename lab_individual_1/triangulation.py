@@ -97,7 +97,7 @@ def delone(points):
     # used_points.add(first_edge[1])
     points.remove(first_edge[0])
     points.remove(first_edge[1])
-    edges = [first_edge]
+    edges = {first_edge}
     live_edges.add(first_edge)
 
     while len(live_edges) > 0:
@@ -114,18 +114,20 @@ def delone(points):
                 min_radius = radius
                 new_point = p
 
-        edges.append(edge)
+        edges.add(edge)
         if new_point == (-1, -1):
             continue
         edge1 = p1, new_point
         edge2 = new_point, p2
 
         for edge in (edge1, edge2):
-            if edge in live_edges in live_edges:
-                edges.append(edge)
+            if edge in edges:
+                continue
+            if edge in live_edges:
+                edges.add(edge)
                 live_edges.remove(edge)
             elif (edge[1], edge[0]) in live_edges:
-                edges.append((edge[1], edge[0]))
+                edges.add((edge[1], edge[0]))
                 live_edges.remove((edge[1], edge[0]))
             else:
                 live_edges.add(edge)
