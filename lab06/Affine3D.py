@@ -409,6 +409,47 @@ class Polyhedron:
         print("success: center = ", self.center_point)
 
     @staticmethod
+    def get_ikosaeder():
+        p0 = np.array([0, 1, 0])
+        p1 = np.array([.951, .5, -.309])
+        p2 = np.array([.587, .5, .809])
+        p3 = np.array([-.587, .5, .809])
+        p4 = np.array([-.951, .5, -.309])
+        p5 = np.array([0, .5, -1])
+        p6 = np.array([.951, -.5, .309])
+        p7 = np.array([0, -.5, 1])
+        p8 = np.array([-.951, -.5 ,.309])
+        p9 = np.array([-.587, -.5 ,-.809])
+        p10 = np.array([.587 ,-.5 ,-.809])
+        p11= np.array([0 ,-1 ,0])
+
+        edge_points = [
+            [p0, p2, p1],
+            [p0, p3 , p2],
+            [p0, p4 , p3],
+            [p0, p5 , p4],
+            [p0 , p1 , p5],
+            [p1 , p2 , p6],
+            [p2 , p7 , p6],
+            [p2 , p3 , p7],
+            [p3 , p8 , p7],
+            [p3 , p4 , p8],
+            [p4 , p9 , p8],
+            [p4 , p5 , p9],
+            [p5 , p10 , p9],
+            [p5 , p1 , p10],
+            [p1 , p6 , p10],
+            [p7 , p11 , p6],
+            [p7 , p8 , p11],
+            [p9 , p11 , p8],
+            [p9 , p10 , p11],
+            [p10 , p6 , p11]
+        ]
+        edges = [Polygon(points) for points in edge_points]
+
+        return Polyhedron(edges, (0,0,0))
+
+    @staticmethod
     def get_cube():
         p1 = np.array([0, 0, 0])
         p2 = np.array([1, 0, 0])

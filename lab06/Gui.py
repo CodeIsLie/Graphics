@@ -12,7 +12,8 @@ class WorkArea:
     DEFAULT_COLOR = 'black'
 
     def __init__(self):
-        self.figure_list = [Polyhedron.get_cube()]
+        self.figure_list = [# Polyhedron.get_cube(),
+                            Polyhedron.get_ikosaeder()]
         self.figure_list[0].scale(150, 150, 150)
         self.cur_figure_ind = 0
 
