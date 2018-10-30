@@ -4,9 +4,7 @@ import numpy as np
 
 '''
 В программе должны присутствовать следующие классы: точка, прямая (ребро), многоугольник (грань), многогранник.
-
 Программа должна содержать следующие возможности:
-
 Отображение одного из правильных многогранников: тетраэдр, гексаэдр, октаэдр, икосаэдр*, додекаэдр*.
 Применение аффинных преобразований: смещение, поворот, масштаб, с указанием параметров преобразования. 
 Преобразования должны быть реализованы матрицами!
@@ -31,14 +29,20 @@ class Polygon:
     def point_count(self):
         return len(self.points)
 
-    def get_transformed_points(self, matrix, points):
+    def get_transformed_points(self, matrix):
+        new_points = []
+        for point in self.points:
+            new_points.append(point_transform(point, matrix))
+        return new_points
+
+    def get_transformed_points1(self, matrix, points):
         new_points = []
         for point in points:
             new_points.append(point_transform(point, matrix))
         return new_points
 
     def transform(self, matrix):
-        self.points = self.get_transformed_points(matrix, self.points)
+        self.points = self.get_transformed_points(matrix)
 
     def translate(self, tx, ty, tz):
         translation_matrix = np.array([
@@ -69,6 +73,17 @@ class Polygon:
         ])
         self.transform(rotation_matrix.transpose())
 
+    def rotate_x_axis(self, theta):
+        cos_theta = np.cos(theta)
+        sin_theta = np.sin(theta)
+        rotation_matrix = np.array([
+            [1, 0, 0, 0],
+            [0, cos_theta, -sin_theta, 0],
+            [0, sin_theta, cos_theta, 0],
+            [0, 0, 0, 1]
+        ])
+        self.transform(rotation_matrix.transpose())
+
     def get_x_rotation(self, theta, points):
         cos_theta = np.cos(theta)
         sin_theta = np.sin(theta)
@@ -78,10 +93,18 @@ class Polygon:
             [0, sin_theta, cos_theta, 0],
             [0, 0, 0, 1]
         ])
-        return self.get_transformed_points(rotation_matrix.transpose(), points)
+        return self.get_transformed_points1(rotation_matrix.transpose(), points)
 
-    def rotate_x_axis(self, theta):
-        self.points = self.get_x_rotation(theta, self.points)
+    def rotate_y_axis(self, theta):
+        cos_theta = np.cos(theta)
+        sin_theta = np.sin(theta)
+        rotation_matrix = np.array([
+            [cos_theta, 0, sin_theta, 0],
+            [0, 1, 0, 0],
+            [-sin_theta, 0, cos_theta, 0],
+            [0, 0, 0, 1]
+        ])
+        self.transform(rotation_matrix.transpose())
 
     def get_y_rotation(self, theta, points):
         cos_theta = np.cos(theta)
@@ -92,10 +115,18 @@ class Polygon:
             [-sin_theta, 0, cos_theta, 0],
             [0, 0, 0, 1]
         ])
-        return self.get_transformed_points(rotation_matrix.transpose(), points)
+        return self.get_transformed_points1(rotation_matrix.transpose(), points)
 
-    def rotate_y_axis(self, theta):
-        self.points = self.get_x_rotation(theta, self.points)
+    def rotate_z_axis(self, theta):
+        cos_theta = np.cos(theta)
+        sin_theta = np.sin(theta)
+        rotation_matrix = np.array([
+            [cos_theta, -sin_theta, 0, 0],
+            [sin_theta, cos_theta, 0, 0],
+            [0, 0, 1, 0],
+            [0, 0, 0, 1]
+        ])
+        self.transform(rotation_matrix.transpose())
 
     def get_z_rotation(self, theta, points):
         cos_theta = np.cos(theta)
@@ -106,10 +137,7 @@ class Polygon:
             [0, 0, 1, 0],
             [0, 0, 0, 1]
         ])
-        return self.get_transformed_points(rotation_matrix.transpose(), points)
-
-    def rotate_z_axis(self, theta):
-        self.points = self.get_z_rotation(theta, self.points)
+        return self.get_transformed_points1(rotation_matrix.transpose(), points)
 
     def mirror(self, xoy, yoz, zox):
         if xoy:
@@ -139,7 +167,7 @@ class Polygon:
             ])
             self.transform(zox_matrix)
 
-    def to_2D_perspective(self, fov_h, fov_w, z_n, z_f):
+    def to_2D(self, fov_h, fov_w, z_n, z_f):
         w = 1 / np.tan(fov_w / 2)
         h = 1 / np.tan(fov_h / 2)
         q = z_f / (z_f - z_n)
@@ -154,17 +182,62 @@ class Polygon:
         lines = list(zip(points, [points[-1]]+points[0:-1]))
         return lines
 
-    def to_2D_isometry(self):
-        points = self.get_y_rotation(35.3334, self.points)
-        points = self.get_x_rotation(45, points)
-        ort_marix = np.array([
+    def to_2D_isometry(self, center):
+        translation_matrix = np.array([
             [1, 0, 0, 0],
             [0, 1, 0, 0],
-            [0, 0, 0, 0],
-            [0, 0, 0, 0]
+            [0, 0, 1, 0],
+            [-center[0], -center[1], -center[2], 1]
         ])
-        points = self.get_transformed_points(ort_marix, points)
-        # points = self.get_z_rotation(120, points)
+
+        points = self.get_transformed_points1(translation_matrix, self.points)
+
+        theta = 45 * np.pi / 180
+        l = 0
+        m = 1
+        n = 0
+        cos_theta = np.cos(theta)
+        sin_theta = np.sin(theta)
+
+        rotation_matrix = np.array([
+            [l ** 2 + cos_theta * (1 - l ** 2), l * (1 - cos_theta) * m + n * sin_theta,
+             l * (1 - cos_theta) * n - m * sin_theta, 0],
+            [l * (1 - cos_theta) * m - n * sin_theta, m ** 2 + cos_theta * (1 - m ** 2),
+             m * (1 - cos_theta) * n + l * sin_theta, 0],
+            [l * (1 - cos_theta) * n + m * sin_theta, m * (1 - cos_theta) * n - l * sin_theta,
+             n ** 2 + cos_theta * (1 - n ** 2), 0],
+            [0, 0, 0, 1]
+        ])
+
+        points = self.get_transformed_points1(rotation_matrix, points)
+
+        theta = 35.264 * np.pi / 180
+        l = 1
+        m = 0
+        n = 0
+        cos_theta = np.cos(theta)
+        sin_theta = np.sin(theta)
+
+        rotation_matrix = np.array([
+            [l ** 2 + cos_theta * (1 - l ** 2), l * (1 - cos_theta) * m + n * sin_theta,
+             l * (1 - cos_theta) * n - m * sin_theta, 0],
+            [l * (1 - cos_theta) * m - n * sin_theta, m ** 2 + cos_theta * (1 - m ** 2),
+             m * (1 - cos_theta) * n + l * sin_theta, 0],
+            [l * (1 - cos_theta) * n + m * sin_theta, m * (1 - cos_theta) * n - l * sin_theta,
+             n ** 2 + cos_theta * (1 - n ** 2), 0],
+            [0, 0, 0, 1]
+        ])
+
+        points = self.get_transformed_points1(rotation_matrix, points)
+
+        translation_matrix = np.array([
+            [1, 0, 0, 0],
+            [0, 1, 0, 0],
+            [0, 0, 1, 0],
+            [center[0], center[1], center[2], 1]
+        ])
+
+        points = self.get_transformed_points1(translation_matrix, points)
         points = [x[:2] for x in points]
         lines = list(zip(points, [points[-1]] + points[0:-1]))
         return lines
@@ -189,8 +262,8 @@ class Polyhedron:
     def get_draw_lines(self):
         res = []
         for edge in self.edges:
-            # res += edge.to_2D_perspective(90, 90, 300, 1000)
-            res += edge.to_2D_isometry()
+            # res += edge.to_2D(90, 90, 300, 1000)
+            res += edge.to_2D_isometry(self.center_point)
         return res
 
     def translate(self, dx, dy, dz):
@@ -357,5 +430,3 @@ class Polyhedron:
         edges = [Polygon(points) for points in edge_points]
 
         return Polyhedron(edges)
-
-

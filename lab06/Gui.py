@@ -86,7 +86,7 @@ class WorkArea:
         self.rotate_z_button = Button(self.root, text='Rotate about z', command=self.rotate_z_axis)
         self.rotate_z_button.grid(row=6, column=6)
 
-        self.rotate_button = Button(self.root, text='Rotate about vector', command=self.rotate_about_vector)
+        self.rotate_button = Button(self.root, text='Rotate around vector', command=self.rotate_around_vector)
         self.rotate_button.grid(row=7, column=3)
 
         self.center_scale_button = Button(self.root, text='Center Scale', command=self.center_scale)
@@ -202,7 +202,7 @@ class WorkArea:
         figure.rotate_about_vector(float(angle_value), x, y, z, x, y, z + 10)
         self.redraw_all()
 
-    def rotate_about_vector(self):
+    def rotate_around_vector(self):
         figure = self.figure_list[self.cur_figure_ind]
         x = float(self.x_input_box.get())
         y = float(self.y_input_box.get())
