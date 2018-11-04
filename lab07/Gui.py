@@ -13,8 +13,13 @@
 from Affine3D import *
 from tkinter import *
 from tkinter import filedialog
+import numpy as np
 
 from PIL import Image, ImageTk, ImageDraw
+
+
+def sin3d(x, y):
+    return np.sin(x + y)
 
 
 class WorkArea:
@@ -99,7 +104,67 @@ class WorkArea:
         self.rotate_z_center_button = Button(self.root, text='Rotate about center z', command=self.rotate_z_center)
         self.rotate_z_center_button.grid(row=6, column=6)
 
+        self.rotate_z_center_button = Button(self.root, text='Draw Graphic', command=self.graph_draw)
+        self.rotate_z_center_button.grid(row=6, column=7)
+
+        Label(self.root, text="count graph segments:").grid(row=7, column=2)
+        self.segments_box = Entry(self.root)
+        self.segments_box.insert(0, "40")
+        self.segments_box.grid(row=8, column=2)
+
+        Label(self.root, text="start x:").grid(row=7, column=3)
+        self.x_start_box = Entry(self.root)
+        self.x_start_box.insert(0, "-10")
+        self.x_start_box.grid(row=8, column=3)
+
+        Label(self.root, text="end x:").grid(row=7, column=4)
+        self.x_end_box = Entry(self.root)
+        self.x_end_box.insert(0, "10")
+        self.x_end_box.grid(row=8, column=4)
+
+        Label(self.root, text="start y:").grid(row=9, column=3)
+        self.y_start_box = Entry(self.root)
+        self.y_start_box.insert(0, "-10")
+        self.y_start_box.grid(row=10, column=3)
+
+        Label(self.root, text="end y:").grid(row=9, column=4)
+        self.y_end_box = Entry(self.root)
+        self.y_end_box.insert(0, "10")
+        self.y_end_box.grid(row=10, column=4)
+
         self.root.mainloop()
+
+
+    def create_func_figure(self, f):
+        # matrix of all points of functions
+        func_points = []
+        cnt_segments = int(self.segments_box.get())
+        x_start = float(self.x_start_box.get())
+        x_end = float(self.x_end_box.get())
+        y_start = float(self.y_start_box.get())
+        y_end = float(self.y_end_box.get())
+        for x in np.linspace(x_start, x_end, cnt_segments):
+            line = []
+            for y in np.linspace(y_start, y_end, cnt_segments):
+                line.append((x, y, f(x, y)))
+            func_points.append(line)
+
+        polygons = []
+        for i in range(0, cnt_segments-1):
+            for j in range(0, cnt_segments-1):
+                polygons.append(Polygon([
+                    func_points[i][j],
+                    func_points[i+1][j],
+                    func_points[i+1][j+1],
+                    func_points[i][j+1]
+                ]))
+        return Polyhedron(polygons)
+
+    def graph_draw(self):
+        self.figure_list = [self.create_func_figure(sin3d)]
+        self.figure_list[0].translate(300, 300, 300)
+        self.figure_list[0].center_scale(25, 25, 25)
+        self.redraw_all()
 
     def translate(self):
         figure = self.figure_list[self.cur_figure_ind]
