@@ -10,7 +10,7 @@
 Сохранить полученную модель в файл.*
 """
 
-from Affine3D import Polyhedron
+from Affine3D import *
 from tkinter import *
 from tkinter import filedialog
 import numpy as np
@@ -138,8 +138,99 @@ class WorkArea:
         self.open_button = Button(self.root, text='Open', command=self.open_figure)
         self.open_button.grid(row=10, column=6)
 
+        self.solid_revolution_button = Button(self.root, text='Solid of revolution', command=self.solid_of_revolution)
+        self.solid_revolution_button.grid(row=11, column=2)
+
+        self.x_check_box = IntVar()
+        Checkbutton(self.root, text="X", variable=self.x_check_box).grid(row=11, column=5)
+        self.y_check_box = IntVar()
+        Checkbutton(self.root, text="Y", variable=self.y_check_box).grid(row=11, column=6)
+        self.z_check_box = IntVar()
+        Checkbutton(self.root, text="Z", variable=self.z_check_box).grid(row=11, column=7)
+
+        self.splits_count_box = Entry(self.root)
+
+        self.splits_count_box.insert(0, "10")
+
+        self.splits_count_box.grid(row=11, column=4)
+
+        Label(self.root, text="splits count: ").grid(row=11, column=3)
+
         self.root.mainloop()
 
+    def solid_of_revolution(self):
+        self.canvas.bind('<Button-1>', self.add_generatrix_point)
+        self.canvas.bind('<Button-3>', self.stop_adding_generatrix_point)
+        self.generatrix_points = []
+
+    def add_generatrix_point(self, event):
+        self.generatrix_points.append((event.x, event.y))
+        points_len = len(self.generatrix_points)
+        if points_len > 1:
+            self.canvas.create_line(
+                self.generatrix_points[points_len - 2][0], self.generatrix_points[points_len - 2][1],
+                self.generatrix_points[points_len - 1][0], self.generatrix_points[points_len - 1][1])
+
+    def stop_adding_generatrix_point(self, event):
+        self.canvas.unbind('<Button-1>')
+        self.canvas.unbind('<Button-3>')
+        split_count = int(self.splits_count_box.get())
+        theta = 360 / split_count
+        theta = theta * np.pi / 180
+        cos_theta = np.cos(theta)
+        sin_theta = np.sin(theta)
+        x_matrix = np.array([
+            [1, 0, 0, 0],
+            [0, cos_theta, -sin_theta, 0],
+            [0, sin_theta, cos_theta, 0],
+            [0, 0, 0, 1]
+        ])
+
+        y_matrix = np.array([
+            [cos_theta, 0, sin_theta, 0],
+            [0, 1, 0, 0],
+            [-sin_theta, 0, cos_theta, 0],
+            [0, 0, 0, 1]
+        ])
+
+        z_matrix = np.array([
+            [cos_theta, -sin_theta, 0, 0],
+            [sin_theta, cos_theta, 0, 0],
+            [0, 0, 1, 0],
+            [0, 0, 0, 1]
+        ])
+
+        x_checked = self.x_check_box.get()
+        z_checked = self.x_check_box.get()
+
+        rotation_matrix = y_matrix
+
+        if x_checked:
+            rotation_matrix = x_matrix
+        if z_checked:
+            rotation_matrix = z_matrix
+
+        points = []
+        for (x, y) in self.generatrix_points:
+            points.append((x, y, 0))
+            print(x, y)
+
+        all_points = [points]
+        for i in range(1, split_count):
+            new_points = []
+            for point in all_points[len(all_points) - 1]:
+                new_point = point_transform(point, rotation_matrix.transpose())
+                new_points.append(new_point)
+            all_points.append(new_points)
+
+        edges = []
+        for i in range(0, split_count):
+            for j in range(0, len(all_points[i]) - 1):
+                edges.append(Polygon([all_points[i][j], all_points[i][j+1], all_points[(i+1) % split_count][j+1], all_points[(i+1) % split_count][j]]))
+        p = Polyhedron(edges, (0, 0, 0))
+        self.figure_list = [p]
+        self.cur_figure_ind = 0
+        self.redraw_all()
 
     def create_func_figure(self, f):
         # matrix of all points of functions
@@ -264,5 +355,7 @@ class WorkArea:
 
     def open_figure(self):
         self.figure_list[0] = Polyhedron.open_from_file()
+        self.redraw_all()
+
 
 gui = WorkArea()
