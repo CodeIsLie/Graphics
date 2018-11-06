@@ -10,7 +10,7 @@
 Сохранить полученную модель в файл.*
 """
 
-from Affine3D import *
+from Affine3D import Polyhedron
 from tkinter import *
 from tkinter import filedialog
 import numpy as np
@@ -24,8 +24,8 @@ def sin3d(x, y):
 
 class WorkArea:
 
-    DEFAULT_WIDTH = 650
-    DEFAULT_HEIGHT = 600
+    DEFAULT_WIDTH = 500
+    DEFAULT_HEIGHT = 400
     DEFAULT_COLOR = 'black'
 
     def __init__(self):
@@ -131,6 +131,12 @@ class WorkArea:
         self.y_end_box = Entry(self.root)
         self.y_end_box.insert(0, "10")
         self.y_end_box.grid(row=10, column=4)
+
+        self.save_button = Button(self.root, text='Save', command=self.save)
+        self.save_button.grid(row=10, column=5)
+
+        self.open_button = Button(self.root, text='Open', command=self.open_figure)
+        self.open_button.grid(row=10, column=6)
 
         self.root.mainloop()
 
@@ -253,5 +259,10 @@ class WorkArea:
         self.image = Image.new('RGB', (self.DEFAULT_WIDTH, self.DEFAULT_WIDTH), 'white')
         self.draw = ImageDraw.Draw(self.image)
 
+    def save(self):
+        self.figure_list[0].save_in_file()
+
+    def open_figure(self):
+        self.figure_list[0] = Polyhedron.open_from_file()
 
 gui = WorkArea()

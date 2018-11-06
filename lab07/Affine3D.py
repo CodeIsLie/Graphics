@@ -469,3 +469,27 @@ class Polyhedron:
         edges = [Polygon(points) for points in edge_points]
 
         return Polyhedron(edges)
+
+    def save_in_file(self):
+        f = open("figure.3dpro", mode="w")
+        for edge in self.edges:
+            f.write(str(edge))
+        f.close()
+
+    @staticmethod
+    def open_from_file():
+        f = open("figure.3dpro", mode="r")
+        edges = []
+        for line in f:
+            edge = []
+            for tup in line.split(sep=") "):
+                if tup == '\n':
+                    continue
+                t = []
+                for n in tup[1:].split(", "):
+                    t.append(float(n))
+                edge.append(tuple(t))
+            edges.append(np.array(edge))
+        f.close()
+        edges = [Polygon(points) for points in edges]
+        return Polyhedron(edges)
