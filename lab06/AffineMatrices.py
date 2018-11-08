@@ -68,3 +68,30 @@ def get_scale_mat(mx, my, mz):
         [0, 0, 0, 1]
     ])
 
+
+def get_yoz_mat():
+    return np.array([
+        [-1, 0, 0, 0],
+        [0, 1, 0, 0],
+        [0, 0, 1, 0],
+        [0, 0, 0, 1]
+    ])
+
+
+def get_zox_mat():
+    return np.array([
+        [1, 0, 0, 0],
+        [0, -1, 0, 0],
+        [0, 0, 1, 0],
+        [0, 0, 0, 1]
+    ])
+
+
+def get_xoy_mat():
+    return np.array([
+        [1, 0, 0, 0],
+        [0, 1, 0, 0],
+        [0, 0, -1, 0],
+        [0, 0, 0, 1]
+    ])
+
