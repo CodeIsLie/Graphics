@@ -1,6 +1,7 @@
 import math
 
 import numpy as np
+from AffineMatrices import *
 
 '''
 В программе должны присутствовать следующие классы: точка, прямая (ребро), многоугольник (грань), многогранник.
@@ -17,59 +18,6 @@ def point_transform(point, matrix):
     x, y, z = point
     point_tensor = np.array([x, y, z, 1])
     return np.dot(point_tensor, matrix)[:3]
-
-
-class AffineMatrixes:
-    @staticmethod
-    def get_rotation_matrix(l, m, n, theta):
-        cos_theta = np.cos(theta)
-        sin_theta = np.sin(theta)
-        rotation_matrix = np.array([
-            [l ** 2 + cos_theta * (1 - l ** 2), l * (1 - cos_theta) * m + n * sin_theta,
-             l * (1 - cos_theta) * n - m * sin_theta, 0],
-            [l * (1 - cos_theta) * m - n * sin_theta, m ** 2 + cos_theta * (1 - m ** 2),
-             m * (1 - cos_theta) * n + l * sin_theta, 0],
-            [l * (1 - cos_theta) * n + m * sin_theta, m * (1 - cos_theta) * n - l * sin_theta,
-             n ** 2 + cos_theta * (1 - n ** 2), 0],
-            [0, 0, 0, 1]
-        ])
-        return rotation_matrix
-
-    @staticmethod
-    def get_y_rotation(angle):
-        cos_theta_y = np.cos(angle * np.pi / 180)
-        sin_theta_y = np.sin(angle * np.pi / 180)
-        rotation_matrix_y = np.array([
-            [cos_theta_y, 0, -sin_theta_y, 0],
-            [0, 1, 0, 0],
-            [sin_theta_y, 0, cos_theta_y, 0],
-            [0, 0, 0, 1]
-        ])
-        return rotation_matrix_y
-
-    @staticmethod
-    def get_x_rotation(angle):
-        cos_theta = np.cos(angle * np.pi/180)
-        sin_theta = np.sin(angle * np.pi/180)
-        rotation_matrix_x = np.array([
-            [1, 0, 0, 0],
-            [0, cos_theta, sin_theta, 0],
-            [0, -sin_theta, cos_theta, 0],
-            [0, 0, 0, 1]
-        ])
-        return rotation_matrix_x
-
-    @staticmethod
-    def get_z_rotation(angle):
-        cos_theta_z = np.cos(angle * np.pi / 180)
-        sin_theta_z = np.sin(angle * np.pi / 180)
-        rotation_matrix_z = np.array([
-            [cos_theta_z, sin_theta_z, 0, 0],
-            [-sin_theta_z, cos_theta_z, 0, 0],
-            [0, 0, 1, 0],
-            [0, 0, 0, 1]
-        ])
-        return rotation_matrix_z
 
 
 class Polygon:
@@ -116,73 +64,32 @@ class Polygon:
         self.transform(scale_matrix)
 
     def rotate_about_vector(self, theta, l, m, n):
-        self.transform(AffineMatrixes.get_rotation_matrix(l, m, n, theta).transpose())
+        rotation_matrix = get_rotation_mat(theta, l, m, n)
+        self.transform(rotation_matrix.transpose())
 
     def rotate_x_axis(self, theta):
-        cos_theta = np.cos(theta)
-        sin_theta = np.sin(theta)
-        rotation_matrix = np.array([
-            [1, 0, 0, 0],
-            [0, cos_theta, -sin_theta, 0],
-            [0, sin_theta, cos_theta, 0],
-            [0, 0, 0, 1]
-        ])
-        self.transform(rotation_matrix.transpose())
+        rotation_matrix = get_x_rotation_mat(theta)
+        self.transform(rotation_matrix)
 
     def get_x_rotation(self, theta, points):
-        cos_theta = np.cos(theta)
-        sin_theta = np.sin(theta)
-        rotation_matrix = np.array([
-            [1, 0, 0, 0],
-            [0, cos_theta, -sin_theta, 0],
-            [0, sin_theta, cos_theta, 0],
-            [0, 0, 0, 1]
-        ])
-        return self.get_transformed_points1(rotation_matrix.transpose(), points)
+        rotation_matrix = get_x_rotation_mat(theta)
+        return self.get_transformed_points1(rotation_matrix, points)
 
     def rotate_y_axis(self, theta):
-        cos_theta = np.cos(theta)
-        sin_theta = np.sin(theta)
-        rotation_matrix = np.array([
-            [cos_theta, 0, sin_theta, 0],
-            [0, 1, 0, 0],
-            [-sin_theta, 0, cos_theta, 0],
-            [0, 0, 0, 1]
-        ])
-        self.transform(rotation_matrix.transpose())
+        rotation_matrix = get_y_rotation_mat(theta)
+        self.transform(rotation_matrix)
 
     def get_y_rotation(self, theta, points):
-        cos_theta = np.cos(theta)
-        sin_theta = np.sin(theta)
-        rotation_matrix = np.array([
-            [cos_theta, 0, sin_theta, 0],
-            [0, 1, 0, 0],
-            [-sin_theta, 0, cos_theta, 0],
-            [0, 0, 0, 1]
-        ])
-        return self.get_transformed_points1(rotation_matrix.transpose(), points)
+        rotation_matrix = get_y_rotation_mat(theta)
+        return self.get_transformed_points1(rotation_matrix, points)
 
     def rotate_z_axis(self, theta):
-        cos_theta = np.cos(theta)
-        sin_theta = np.sin(theta)
-        rotation_matrix = np.array([
-            [cos_theta, -sin_theta, 0, 0],
-            [sin_theta, cos_theta, 0, 0],
-            [0, 0, 1, 0],
-            [0, 0, 0, 1]
-        ])
-        self.transform(rotation_matrix.transpose())
+        rotation_matrix = get_z_rotation_mat(theta)
+        self.transform(rotation_matrix)
 
     def get_z_rotation(self, theta, points):
-        cos_theta = np.cos(theta)
-        sin_theta = np.sin(theta)
-        rotation_matrix = np.array([
-            [cos_theta, -sin_theta, 0, 0],
-            [sin_theta, cos_theta, 0, 0],
-            [0, 0, 1, 0],
-            [0, 0, 0, 1]
-        ])
-        return self.get_transformed_points1(rotation_matrix.transpose(), points)
+        rotation_matrix = get_z_rotation_mat(theta)
+        return self.get_transformed_points1(rotation_matrix, points)
 
     def mirror(self, xoy, yoz, zox):
         if xoy:
@@ -227,7 +134,6 @@ class Polygon:
         lines = list(zip(points, [points[-1]]+points[0:-1]))
         return lines
 
-
     def to_2D_isometry(self, center):
         translation_matrix = np.array([
             [1, 0, 0, 0],
@@ -235,25 +141,28 @@ class Polygon:
             [0, 0, 1, 0],
             [-center[0], -center[1], -center[2], 1]
         ])
+
         points = self.get_transformed_points1(translation_matrix, self.points)
 
+        theta = 45 * np.pi / 180
         l = 0
         m = 1
         n = 0
-        theta = 45 * np.pi / 180
-        points = self.get_transformed_points1(AffineMatrixes.get_rotation_matrix(l, m, n, theta), points)
+        rotation_matrix = get_rotation_mat(theta, l, m, n)
+        points = self.get_transformed_points1(rotation_matrix, points)
 
+        theta = 35.264 * np.pi / 180
         l = 1
         m = 0
         n = 0
-        theta = 35.264 * np.pi / 180
-        points = self.get_transformed_points1(AffineMatrixes.get_rotation_matrix(l, m, n, theta), points)
+        rotation_matrix = get_rotation_mat(theta, l, m, n)
+        points = self.get_transformed_points1(rotation_matrix, points)
 
         translation_matrix = np.array([
             [1, 0, 0, 0],
             [0, 1, 0, 0],
             [0, 0, 1, 0],
-            [*center, 1]
+            [center[0], center[1], center[2], 1]
         ])
 
         points = self.get_transformed_points1(translation_matrix, points)
@@ -334,10 +243,21 @@ class Polyhedron:
         for edge in self.edges:
             edge.rotate_about_vector(theta * np.pi/180, l, m, n)
 
-        rotation_matrix = AffineMatrixes.get_rotation_matrix(l, m, n, theta)
+        cos_theta = np.cos(theta * np.pi/180)
+        sin_theta = np.sin(theta * np.pi/180)
+        rotation_matrix = np.array([
+            [l ** 2 + cos_theta * (1 - l ** 2), l * (1 - cos_theta) * m + n * sin_theta,
+             l * (1 - cos_theta) * n - m * sin_theta, 0],
+            [l * (1 - cos_theta) * m - n * sin_theta, m ** 2 + cos_theta * (1 - m ** 2),
+             m * (1 - cos_theta) * n + l * sin_theta, 0],
+            [l * (1 - cos_theta) * n + m * sin_theta, m * (1 - cos_theta) * n - l * sin_theta,
+             n ** 2 + cos_theta * (1 - n ** 2), 0],
+            [0, 0, 0, 1]
+        ])
         self.center_point = point_transform(self.center_point, rotation_matrix.transpose())
 
         self.translate(x, y, z)
+
         print("success: center = ", self.center_point)
 
     def rotate_all(self, angle_x, angle_y, angle_z):
@@ -346,14 +266,35 @@ class Polyhedron:
             edge.rotate_y_axis(angle_y * np.pi/180)
             edge.rotate_z_axis(angle_z * np.pi/180)
 
-        rotation_matrix_x = AffineMatrixes.get_x_rotation(angle_x)
-        self.center_point = point_transform(self.center_point, rotation_matrix_x)
+        cos_theta_x = np.cos(angle_x * np.pi/180)
+        sin_theta_x = np.sin(angle_x * np.pi/180)
+        rotation_matrix_x = np.array([
+            [1, 0, 0, 0],
+            [0, cos_theta_x, -sin_theta_x, 0],
+            [0, sin_theta_x, cos_theta_x, 0],
+            [0, 0, 0, 1]
+        ])
+        self.center_point = point_transform(self.center_point, rotation_matrix_x.transpose())
 
-        rotation_matrix_y = AffineMatrixes.get_y_rotation(angle_y)
-        self.center_point = point_transform(self.center_point, rotation_matrix_y)
+        cos_theta_y = np.cos(angle_y * np.pi/180)
+        sin_theta_y = np.sin(angle_y * np.pi/180)
+        rotation_matrix_y = np.array([
+            [cos_theta_y, 0, sin_theta_y, 0],
+            [0, 1, 0, 0],
+            [-sin_theta_y, 0, cos_theta_y, 0],
+            [0, 0, 0, 1]
+        ])
+        self.center_point = point_transform(self.center_point, rotation_matrix_y.transpose())
 
-        rotation_matrix_z = AffineMatrixes.get_z_rotation(angle_z)
-        self.center_point = point_transform(self.center_point, rotation_matrix_z)
+        cos_theta_z = np.cos(angle_z * np.pi/180)
+        sin_theta_z = np.sin(angle_z * np.pi/180)
+        rotation_matrix_z = np.array([
+            [cos_theta_z, -sin_theta_z, 0, 0],
+            [sin_theta_z, cos_theta_z, 0, 0],
+            [0, 0, 1, 0],
+            [0, 0, 0, 1]
+        ])
+        self.center_point = point_transform(self.center_point, rotation_matrix_z.transpose())
 
     def draw(self, image_draw):
         lines = self.get_draw_lines()

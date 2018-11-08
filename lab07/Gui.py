@@ -21,6 +21,10 @@ from PIL import Image, ImageTk, ImageDraw
 def sin3d(x, y):
     return np.sin(x + y)
 
+def flower_rose(x, y):
+    return 100 - 3/np.sqrt(x*x + y*y) + np.sin(np.sqrt(x*x + y*y)) + \
+           np.sqrt(200 - x*x + y*y + 10*np.sin(x) + 10*np.sin(y))/1000
+
 
 class WorkArea:
 
@@ -149,11 +153,8 @@ class WorkArea:
         Checkbutton(self.root, text="Z", variable=self.z_check_box).grid(row=11, column=7)
 
         self.splits_count_box = Entry(self.root)
-
         self.splits_count_box.insert(0, "10")
-
         self.splits_count_box.grid(row=11, column=4)
-
         Label(self.root, text="splits count: ").grid(row=11, column=3)
 
         self.root.mainloop()
@@ -255,10 +256,14 @@ class WorkArea:
                     func_points[i+1][j+1],
                     func_points[i][j+1]
                 ]))
+
+        print("start point is {}".format(func_points[0][0]))
         return Polyhedron(polygons)
 
     def graph_draw(self):
-        self.figure_list = [self.create_func_figure(sin3d)]
+        # self.figure_list = [self.create_func_figure(sin3d)]
+        # self.figure_list = [self.create_func_figure(lambda x, y: x*y)]
+        self.figure_list = [self.create_func_figure(lambda x, y: np.sin(x) * np.cos(y))]
         self.figure_list[0].translate(300, 300, 300)
         self.figure_list[0].center_scale(25, 25, 25)
         self.redraw_all()
