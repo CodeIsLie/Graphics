@@ -26,6 +26,7 @@ def get_x_rotation_mat(theta):
     ])
     return rotation_matrix
 
+
 def get_y_rotation_mat(theta):
     cos_theta = np.cos(theta)
     sin_theta = np.sin(theta)
@@ -48,3 +49,22 @@ def get_z_rotation_mat(theta):
         [0, 0, 0, 1]
     ])
     return rotation_matrix
+
+
+def get_translation_mat(dx, dy, dz):
+    return np.array([
+        [1, 0, 0, 0],
+        [0, 1, 0, 0],
+        [0, 0, 1, 0],
+        [dx, dy, dz, 1]
+    ])
+
+
+def get_scale_mat(mx, my, mz):
+    return np.array([
+        [mx, 0, 0, 0],
+        [0, my, 0, 0],
+        [0, 0, mz, 0],
+        [0, 0, 0, 1]
+    ])
+

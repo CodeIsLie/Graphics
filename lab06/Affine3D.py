@@ -46,21 +46,11 @@ class Polygon:
         self.points = self.get_transformed_points(matrix)
 
     def translate(self, tx, ty, tz):
-        translation_matrix = np.array([
-            [1, 0, 0, 0],
-            [0, 1, 0, 0],
-            [0, 0, 1, 0],
-            [tx, ty, tz, 1]
-        ])
+        translation_matrix = get_translation_mat(tx, ty, tz)
         self.transform(translation_matrix)
 
     def scale(self, mx, my, mz):
-        scale_matrix = np.array([
-            [mx, 0, 0, 0],
-            [0, my, 0, 0],
-            [0, 0, mz, 0],
-            [0, 0, 0, 1]
-        ])
+        scale_matrix = get_scale_mat(mx, my, mz)
         self.transform(scale_matrix)
 
     def rotate_about_vector(self, theta, l, m, n):
@@ -135,13 +125,7 @@ class Polygon:
         return lines
 
     def to_2D_isometry(self, center):
-        translation_matrix = np.array([
-            [1, 0, 0, 0],
-            [0, 1, 0, 0],
-            [0, 0, 1, 0],
-            [-center[0], -center[1], -center[2], 1]
-        ])
-
+        translation_matrix = get_translation_mat(*[-x for x in center])
         points = self.get_transformed_points1(translation_matrix, self.points)
 
         theta = 45 * np.pi / 180
@@ -158,13 +142,7 @@ class Polygon:
         rotation_matrix = get_rotation_mat(theta, l, m, n)
         points = self.get_transformed_points1(rotation_matrix, points)
 
-        translation_matrix = np.array([
-            [1, 0, 0, 0],
-            [0, 1, 0, 0],
-            [0, 0, 1, 0],
-            [center[0], center[1], center[2], 1]
-        ])
-
+        translation_matrix = get_translation_mat(*center)
         points = self.get_transformed_points1(translation_matrix, points)
         points = [x[:2] for x in points]
         lines = list(zip(points, [points[-1]] + points[0:-1]))
@@ -194,16 +172,14 @@ class Polyhedron:
             res += edge.to_2D_isometry(self.center_point)
         return res
 
+    def transform(self, matrix):
+        pass
+
     def translate(self, dx, dy, dz):
         for edge in self.edges:
             edge.translate(dx, dy, dz)
 
-        translation_matrix = np.array([
-            [1, 0, 0, 0],
-            [0, 1, 0, 0],
-            [0, 0, 1, 0],
-            [dx, dy, dz, 1]
-        ])
+        translation_matrix = get_translation_mat(dx, dy, dz)
         self.center_point = point_transform(self.center_point, translation_matrix)
 
     def center_scale(self, mx, my, mz):
@@ -220,12 +196,7 @@ class Polyhedron:
         for edge in self.edges:
             edge.scale(mx, my, mz)
 
-        scale_matrix = np.array([
-            [mx, 0, 0, 0],
-            [0, my, 0, 0],
-            [0, 0, mz, 0],
-            [0, 0, 0, 1]
-        ])
+        scale_matrix = get_scale_mat(mx, my, mz)
         self.center_point = point_transform(self.center_point, scale_matrix)
 
     def rotate_about_vector(self, theta, x, y, z, x1, y1, z1):
@@ -240,20 +211,11 @@ class Polyhedron:
 
         self.translate(-x, -y, -z)
 
+        theta *= np.pi / 180
         for edge in self.edges:
-            edge.rotate_about_vector(theta * np.pi/180, l, m, n)
+            edge.rotate_about_vector(theta, l, m, n)
 
-        cos_theta = np.cos(theta * np.pi/180)
-        sin_theta = np.sin(theta * np.pi/180)
-        rotation_matrix = np.array([
-            [l ** 2 + cos_theta * (1 - l ** 2), l * (1 - cos_theta) * m + n * sin_theta,
-             l * (1 - cos_theta) * n - m * sin_theta, 0],
-            [l * (1 - cos_theta) * m - n * sin_theta, m ** 2 + cos_theta * (1 - m ** 2),
-             m * (1 - cos_theta) * n + l * sin_theta, 0],
-            [l * (1 - cos_theta) * n + m * sin_theta, m * (1 - cos_theta) * n - l * sin_theta,
-             n ** 2 + cos_theta * (1 - n ** 2), 0],
-            [0, 0, 0, 1]
-        ])
+        rotation_matrix = get_rotation_mat(theta, l, m, n)
         self.center_point = point_transform(self.center_point, rotation_matrix.transpose())
 
         self.translate(x, y, z)
@@ -261,40 +223,22 @@ class Polyhedron:
         print("success: center = ", self.center_point)
 
     def rotate_all(self, angle_x, angle_y, angle_z):
+        angle_x *= np.pi / 180
+        angle_y *= np.pi / 180
+        angle_z *= np.pi / 180
         for edge in self.edges:
-            edge.rotate_x_axis(angle_x * np.pi/180)
-            edge.rotate_y_axis(angle_y * np.pi/180)
-            edge.rotate_z_axis(angle_z * np.pi/180)
+            edge.rotate_x_axis(angle_x)
+            edge.rotate_y_axis(angle_y)
+            edge.rotate_z_axis(angle_z)
 
-        cos_theta_x = np.cos(angle_x * np.pi/180)
-        sin_theta_x = np.sin(angle_x * np.pi/180)
-        rotation_matrix_x = np.array([
-            [1, 0, 0, 0],
-            [0, cos_theta_x, -sin_theta_x, 0],
-            [0, sin_theta_x, cos_theta_x, 0],
-            [0, 0, 0, 1]
-        ])
-        self.center_point = point_transform(self.center_point, rotation_matrix_x.transpose())
+        rotation_matrix_x = get_x_rotation_mat(angle_x)
+        self.center_point = point_transform(self.center_point, rotation_matrix_x)
 
-        cos_theta_y = np.cos(angle_y * np.pi/180)
-        sin_theta_y = np.sin(angle_y * np.pi/180)
-        rotation_matrix_y = np.array([
-            [cos_theta_y, 0, sin_theta_y, 0],
-            [0, 1, 0, 0],
-            [-sin_theta_y, 0, cos_theta_y, 0],
-            [0, 0, 0, 1]
-        ])
-        self.center_point = point_transform(self.center_point, rotation_matrix_y.transpose())
+        rotation_matrix_y = get_y_rotation_mat(angle_y)
+        self.center_point = point_transform(self.center_point, rotation_matrix_y)
 
-        cos_theta_z = np.cos(angle_z * np.pi/180)
-        sin_theta_z = np.sin(angle_z * np.pi/180)
-        rotation_matrix_z = np.array([
-            [cos_theta_z, -sin_theta_z, 0, 0],
-            [sin_theta_z, cos_theta_z, 0, 0],
-            [0, 0, 1, 0],
-            [0, 0, 0, 1]
-        ])
-        self.center_point = point_transform(self.center_point, rotation_matrix_z.transpose())
+        rotation_matrix_z = get_z_rotation_mat(angle_z)
+        self.center_point = point_transform(self.center_point, rotation_matrix_z)
 
     def draw(self, image_draw):
         lines = self.get_draw_lines()
