@@ -11,15 +11,27 @@ import numpy as np
 DEFAULT_COLOR = 'black'
 
 
+# def point_transform(point, matrix):
+#     x, y, z = point
+#     point_tensor = np.array([x, y, z, 1])
+#     return np.dot(point_tensor, matrix)[:3]
+
 def point_transform(point, matrix):
     x, y, z = point
     point_tensor = np.array([x, y, z, 1])
-    return np.dot(point_tensor, matrix)[:3]
-
+    result = np.dot(point_tensor, matrix)
+    res = np.array([result[0] / result[3], result[1] / result[3], result[2] / result[3]])
+    return res
 
 class Polygon:
     def __init__(self, points=None):
         self.points = [] if points is None else points
+
+    def get_clone(self):
+        clone = Polygon()
+        for p in self.points:
+            clone.add_point((p[0], p[1], p[2]))
+        return clone
 
     def add_point(self, point):
         self.points.append(point)
@@ -36,6 +48,12 @@ class Polygon:
     def get_transformed_points1(self, matrix, points):
         new_points = []
         for point in points:
+            new_points.append(point_transform(point, matrix))
+        return new_points
+
+    def get_transformed_points2(self, matrix):
+        new_points = []
+        for point in self.points:
             new_points.append(point_transform(point, matrix))
         return new_points
 
@@ -175,7 +193,13 @@ class Polygon:
             [0, 0, q, 1],
             [0, 0, -q * z_n, 0]
         ])
-        points = self.get_transformed_points(matrix)
+        matrix2 = np.array([
+            [1, 0, 0, 0],
+            [0, 1, 0, 0],
+            [0, 0, 0, -0.05],
+            [0, 0, 0, 1]
+        ])
+        points = self.get_transformed_points2(matrix)
         points = [x[:2] for x in points]
         lines = list(zip(points, [points[-1]]+points[0:-1]))
         return lines
@@ -253,6 +277,13 @@ class Polyhedron:
     def __init__(self, edges=None, center_point=None):
         self.edges = [] if edges is None else edges
         self.center_point = (0.5, 0.5, 0.5) if center_point is None else center_point
+
+    def get_clone(self):
+        clone = Polyhedron()
+        for e in self.edges:
+            clone.add_edge(e.get_clone())
+        clone.center_point = (self.center_point[0], self.center_point[1], self.center_point[2])
+        return clone
 
     def add_edge(self, edge):
         self.edges.append(edge)

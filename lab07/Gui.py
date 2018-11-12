@@ -14,12 +14,14 @@ from Affine3D import *
 from tkinter import *
 from tkinter import filedialog
 import numpy as np
+from Camera import *
 
 from PIL import Image, ImageTk, ImageDraw
 
 
 def sin3d(x, y):
     return np.sin(x + y)
+
 
 def flower_rose(x, y):
     return 100 - 3/np.sqrt(x*x + y*y) + np.sin(np.sqrt(x*x + y*y)) + \
@@ -28,8 +30,8 @@ def flower_rose(x, y):
 
 class WorkArea:
 
-    DEFAULT_WIDTH = 500
-    DEFAULT_HEIGHT = 400
+    DEFAULT_WIDTH = 600
+    DEFAULT_HEIGHT = 600
     DEFAULT_COLOR = 'black'
 
     def __init__(self):
@@ -48,7 +50,7 @@ class WorkArea:
         self.redraw_button = Button(self.root, text='Redraw', command=self.redraw_all)
         self.redraw_button.grid(row=2, column=1)
 
-        self.canvas = Canvas(self.root, bg='white', width=self.DEFAULT_WIDTH, height=self.DEFAULT_WIDTH)
+        self.canvas = Canvas(self.root, bg='white', width=self.DEFAULT_WIDTH, height=self.DEFAULT_HEIGHT)
         self.canvas.grid(row=1, columnspan=10)
         self.image = Image.new('RGB', (self.DEFAULT_WIDTH, self.DEFAULT_HEIGHT), 'white')
         self.draw = ImageDraw.Draw(self.image)
@@ -157,7 +159,26 @@ class WorkArea:
         self.splits_count_box.grid(row=11, column=4)
         Label(self.root, text="splits count: ").grid(row=11, column=3)
 
+        self.open_button = Button(self.root, text='Create camera', command=self.create_camera)
+        self.open_button.grid(row=8, column=5)
+
         self.root.mainloop()
+
+    def create_camera(self):
+        r = -1/10
+        matrix = np.array([
+            [1, 0, 0, 0],
+            [0, 1, 0, 0],
+            [0, 0, 0, r],
+            [0, 0, 0, 1]
+        ])
+        camera = Camera((0, 0, 0), None, self.figure_list[self.cur_figure_ind], matrix)
+
+        self.use_eraser()
+        camera.switch_to_camera_view(self.draw)
+        self.canvas.image = ImageTk.PhotoImage(self.image)
+        self.canvas.create_image(0, 0, image=self.canvas.image, anchor='nw')
+
 
     def solid_of_revolution(self):
         self.canvas.bind('<Button-1>', self.add_generatrix_point)
