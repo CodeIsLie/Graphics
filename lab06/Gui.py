@@ -12,8 +12,9 @@ class WorkArea:
     DEFAULT_COLOR = 'black'
 
     def __init__(self):
-        self.figure_list = [# Polyhedron.get_cube(),
-                            Polyhedron.get_ikosaeder()]
+        self.figure_list = [ Polyhedron.get_cube()
+                            #Polyhedron.get_ikosaeder()
+                            ]
         self.figure_list[0].scale(150, 150, 150)
         self.cur_figure_ind = 0
 
@@ -166,6 +167,47 @@ class WorkArea:
                 self.generatrix_points[points_len - 2][0], self.generatrix_points[points_len - 2][1],
                 self.generatrix_points[points_len - 1][0], self.generatrix_points[points_len - 1][1])
 
+    def write_obj_model(self, filename, all_points, polygons, polygon_indices):
+        lines = []
+        # Write v x y z
+        for slice in all_points:
+            for x, y, z in slice:
+                lines.append("v {} {} {}".format(x, y, z))
+
+        lines.append("")
+        def calc_normal(polygon):
+            # take 1, 2, 3 vertices
+            return 1, 1, 1
+
+        # calc vertex normal for each 4 edged polygon
+        # write vn to files
+        for polygon in polygons:
+            vn = calc_normal(polygon)
+            x, y, z = vn
+            lines.append("vn {} {} {}".format(x, y, z))
+
+        lines.append("g rotateFigure")
+        lines.append("s 1")
+
+        for polygon, indices, n in zip(polygons, polygon_indices, range(1, len(polygons)+1)):
+            # split each polygon to 2 triangles-faces
+            first_triangle = polygon_indices[1], polygon_indices[2], polygon_indices[3]
+            second_triangle = polygon_indices[2], polygon_indices[3], polygon_indices[4]
+
+            # f number_of_v1//number of normal
+            face_string = "f"
+            for p in first_triangle:
+                face_string += " {}//{}".format(p, n)
+            lines.append(face_string)
+
+            face_string = "f"
+            for p in second_triangle:
+                face_string += " {}//{}".format(p, n)
+            lines.append(face_string)
+
+        f = open(filename, 'w')
+        f.writelines(lines)
+
     def stop_adding_generatrix_point(self, event):
         self.canvas.unbind('<Button-1>')
         self.canvas.unbind('<Button-3>')
@@ -213,15 +255,33 @@ class WorkArea:
         all_points = [points]
         for i in range(1, split_count):
             new_points = []
-            for point in all_points[len(all_points) - 1]:
+            for point in all_points[-1]:
                 new_point = point_transform(point, rotation_matrix.transpose())
                 new_points.append(new_point)
             all_points.append(new_points)
 
+        point_numbers = []
+        index = 1
+        for point_indices in all_points:
+            indexes = list(range(index, index+len(points)))
+            index += len(points)
+            point_numbers.append(indexes)
+
         edges = []
+        polygons = []
+        polygon_numbers = []
         for i in range(0, split_count):
             for j in range(0, len(all_points[i]) - 1):
-                edges.append(Polygon([all_points[i][j], all_points[i][j+1], all_points[(i+1) % split_count][j+1], all_points[(i+1) % split_count][j]]))
+                polygon = [all_points[i][j], all_points[i][j+1], all_points[(i+1) % split_count][j+1],
+                                      all_points[(i+1) % split_count][j]]
+                polygon_number = [point_numbers[i][j], point_numbers[i][j+1], point_numbers[(i+1) % split_count][j+1],
+                                   point_numbers[(i+1) % split_count][j]]
+                polygon_numbers.append(polygon_number)
+                polygons.append(polygon)
+                edges.append(Polygon(polygon))
+
+        self.write_obj_model("figure.obj", all_points, polygons, polygon_numbers)
+
         p = Polyhedron(edges, (0, 0, 0))
         self.figure_list = [p]
         self.cur_figure_ind = 0

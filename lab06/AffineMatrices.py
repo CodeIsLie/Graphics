@@ -14,6 +14,10 @@ def get_rotation_mat(theta, l, m, n):
         [0, 0, 0, 1]
     ])
 
+def get_isometry_mat(alpha, beta):
+    rotate_mat_x = get_x_rotation_mat(alpha)
+    rotate_mat_y = get_y_rotation_mat(beta)
+    return np.dot(rotate_mat_x, rotate_mat_y)
 
 def get_x_rotation_mat(theta):
     cos_theta = np.cos(theta)

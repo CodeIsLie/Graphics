@@ -7,19 +7,16 @@
 '''
 import math
 import numpy as np
+from AffineMatrices import *
 
 DEFAULT_COLOR = 'black'
 
-
-# def point_transform(point, matrix):
-#     x, y, z = point
-#     point_tensor = np.array([x, y, z, 1])
-#     return np.dot(point_tensor, matrix)[:3]
 
 def point_transform(point, matrix):
     x, y, z = point
     point_tensor = np.array([x, y, z, 1])
     result = np.dot(point_tensor, matrix)
+    # print(result)
     res = np.array([result[0] / result[3], result[1] / result[3], result[2] / result[3]])
     return res
 
@@ -183,6 +180,16 @@ class Polygon:
             ])
             self.transform(zox_matrix)
 
+    def to_perspective(self, p=0.2, q=0.2):
+        perspective_mat = get_perspective_mat(p, q)
+        points = self.get_transformed_points(perspective_mat)
+        points = [x[:2] for x in points]
+        return points
+
+    def get_lines(self, points):
+        lines = list(zip(points, [points[-1]] + points[0:-1]))
+        return lines
+
     def to_2D(self, fov_h, fov_w, z_n, z_f):
         w = 1 / np.tan(fov_w / 2)
         h = 1 / np.tan(fov_h / 2)
@@ -292,7 +299,9 @@ class Polyhedron:
         res = []
         for edge in self.edges:
             # res += edge.to_2D(90, 90, 300, 1000)
-            res += edge.to_2D_isometry(self.center_point)
+            # lines = edge.to_2D_isometry(self.center_point)
+            lines = edge.get_lines(edge.to_perspective())
+            res += lines
         return res
 
     def translate(self, dx, dy, dz):
@@ -480,14 +489,14 @@ class Polyhedron:
 
     @staticmethod
     def get_cube():
-        p1 = np.array([0, 0, 0])
-        p2 = np.array([1, 0, 0])
-        p3 = np.array([0, 1, 0])
-        p4 = np.array([0, 0, 1])
-        p5 = np.array([1, 1, 0])
-        p6 = np.array([1, 0, 1])
-        p7 = np.array([0, 1, 1])
-        p8 = np.array([1, 1, 1])
+        p1 = np.array([0, 0, 0]) - 0.5
+        p2 = np.array([1, 0, 0]) - 0.5
+        p3 = np.array([0, 1, 0]) - 0.5
+        p4 = np.array([0, 0, 1]) - 0.5
+        p5 = np.array([1, 1, 0]) - 0.5
+        p6 = np.array([1, 0, 1]) - 0.5
+        p7 = np.array([0, 1, 1]) - 0.5
+        p8 = np.array([1, 1, 1]) - 0.5
 
         edge_points = [
             [p1, p2, p5, p3],
@@ -499,7 +508,7 @@ class Polyhedron:
         ]
         edges = [Polygon(points) for points in edge_points]
 
-        return Polyhedron(edges)
+        return Polyhedron(edges, (0, 0, 0))
 
     def save_in_file(self):
         f = open("figure.3dpro", mode="w")

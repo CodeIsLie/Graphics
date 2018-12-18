@@ -17,6 +17,8 @@ DEFAULT_COLOR = 'black'
 def point_transform(point, matrix):
     x, y, z = point
     point_tensor = np.array([x, y, z, 1])
+    if abs(point_tensor[2] - 1.0) > 1e-10:
+        print("last point of vector is {}".format(point_tensor[2]))
     return np.dot(point_tensor, matrix)[:3]
 
 
@@ -49,51 +51,6 @@ class Polygon:
         translation_matrix = get_translation_mat(tx, ty, tz)
         self.transform(translation_matrix)
 
-    # def scale(self, mx, my, mz):
-    #     scale_matrix = get_scale_mat(mx, my, mz)
-    #     self.transform(scale_matrix)
-    #
-    # def rotate_about_vector(self, theta, l, m, n):
-    #     rotation_matrix = get_rotation_mat(theta, l, m, n)
-    #     self.transform(rotation_matrix.transpose())
-    #
-    # def rotate_x_axis(self, theta):
-    #     rotation_matrix = get_x_rotation_mat(theta)
-    #     self.transform(rotation_matrix)
-    #
-    # def get_x_rotation(self, theta, points):
-    #     rotation_matrix = get_x_rotation_mat(theta)
-    #     return self.get_transformed_points1(rotation_matrix, points)
-
-    # def rotate_y_axis(self, theta):
-    #     rotation_matrix = get_y_rotation_mat(theta)
-    #     self.transform(rotation_matrix)
-    #
-    # def get_y_rotation(self, theta, points):
-    #     rotation_matrix = get_y_rotation_mat(theta)
-    #     return self.get_transformed_points1(rotation_matrix, points)
-    #
-    # def rotate_z_axis(self, theta):
-    #     rotation_matrix = get_z_rotation_mat(theta)
-    #     self.transform(rotation_matrix)
-
-    # def get_z_rotation(self, theta, points):
-    #     rotation_matrix = get_z_rotation_mat(theta)
-    #     return self.get_transformed_points1(rotation_matrix, points)
-
-    # def mirror(self, xoy, yoz, zox):
-    #     if xoy:
-    #         xoy_matrix = get_xoy_mat()
-    #         self.transform(xoy_matrix)
-    #
-    #     if yoz:
-    #         yoz_matrix = get_yoz_mat()
-    #         self.transform(yoz_matrix)
-    #
-    #     if zox:
-    #         zox_matrix = get_zox_mat()
-    #         self.transform(zox_matrix)
-
     def to_2D(self, fov_h, fov_w, z_n, z_f):
         w = 1 / np.tan(fov_w / 2)
         h = 1 / np.tan(fov_h / 2)
@@ -113,19 +70,9 @@ class Polygon:
         translation_matrix = get_translation_mat(*[-x for x in center])
         points = self.transform_points(translation_matrix, self.points)
 
-        theta = 45 * np.pi / 180
-        l = 0
-        m = 1
-        n = 0
-        rotation_matrix = get_rotation_mat(theta, l, m, n)
-        points = self.transform_points(rotation_matrix, points)
-
-        theta = 35.264 * np.pi / 180
-        l = 1
-        m = 0
-        n = 0
-        rotation_matrix = get_rotation_mat(theta, l, m, n)
-        points = self.transform_points(rotation_matrix, points)
+        alpha = 45 * np.pi / 180
+        beta = 35.264 * np.pi / 180
+        points = self.transform_points(get_isometry_mat(alpha, beta), points)
 
         translation_matrix = get_translation_mat(*center)
         points = self.transform_points(translation_matrix, points)
