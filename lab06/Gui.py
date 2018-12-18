@@ -175,6 +175,8 @@ class WorkArea:
                 lines.append("v {} {} {}".format(x, y, z))
 
         lines.append("")
+
+        # TODO: calc vertex Normal
         def calc_normal(polygon):
             # take 1, 2, 3 vertices
             return 1, 1, 1
@@ -189,24 +191,26 @@ class WorkArea:
         lines.append("g rotateFigure")
         lines.append("s 1")
 
+        cnt_polygons = len(polygons)
         for polygon, indices, n in zip(polygons, polygon_indices, range(1, len(polygons)+1)):
             # split each polygon to 2 triangles-faces
-            first_triangle = polygon_indices[1], polygon_indices[2], polygon_indices[3]
-            second_triangle = polygon_indices[2], polygon_indices[3], polygon_indices[4]
+            first_triangle = indices[0], indices[1], indices[2]
+            second_triangle = indices[0], indices[3], indices[2]
 
             # f number_of_v1//number of normal
             face_string = "f"
             for p in first_triangle:
-                face_string += " {}//{}".format(p, n)
+                face_string += " {}//{}".format(p, 2*n-1)
             lines.append(face_string)
 
             face_string = "f"
             for p in second_triangle:
-                face_string += " {}//{}".format(p, n)
+                face_string += " {}//{}".format(p, 2*n)
             lines.append(face_string)
 
         f = open(filename, 'w')
         f.writelines(lines)
+
 
     def stop_adding_generatrix_point(self, event):
         self.canvas.unbind('<Button-1>')
