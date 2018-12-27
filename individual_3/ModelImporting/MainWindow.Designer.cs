@@ -47,9 +47,10 @@
             this.Scene.ColorBits = ((byte)(32));
             this.Scene.Cursor = System.Windows.Forms.Cursors.Cross;
             this.Scene.DepthBits = ((byte)(16));
-            this.Scene.Location = new System.Drawing.Point(12, 12);
+            this.Scene.Location = new System.Drawing.Point(16, 15);
+            this.Scene.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.Scene.Name = "Scene";
-            this.Scene.Size = new System.Drawing.Size(891, 426);
+            this.Scene.Size = new System.Drawing.Size(1188, 524);
             this.Scene.StencilBits = ((byte)(0));
             this.Scene.TabIndex = 0;
             this.Scene.Load += new System.EventHandler(this.Scene_Load);
@@ -64,13 +65,15 @@
             // 
             // MainWindow
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(915, 450);
+            this.ClientSize = new System.Drawing.Size(1220, 554);
             this.Controls.Add(this.Scene);
+            this.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.Name = "MainWindow";
             this.Text = "The Room";
             this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
+            this.Load += new System.EventHandler(this.MainWindow_Load);
             this.ResumeLayout(false);
 
         }
