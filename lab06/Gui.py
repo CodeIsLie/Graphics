@@ -176,9 +176,21 @@ class WorkArea:
 
         lines.append("")
 
+        def minus(p1, p2):
+            return [x - y for x,y in zip(p1, p2)]
+
         # TODO: calc vertex Normal
         def calc_normal(polygon):
             # take 1, 2, 3 vertices
+            p1 = polygon[0]
+            p2 = polygon[1]
+            p3 = polygon[2]
+
+            v1 = minus(p2,p1)
+            v2 = minus(p3,p2)
+
+            normal = v1[0] * v2[2]
+
             return 1, 1, 1
 
         # calc vertex normal for each 4 edged polygon
