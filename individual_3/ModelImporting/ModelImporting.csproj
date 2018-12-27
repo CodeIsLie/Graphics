@@ -109,7 +109,16 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <None Include="GouraudModelFrag.frag" />
+    <None Include="GouraudModelVert.vert" />
+    <None Include="LanternFrag.frag" />
+    <None Include="LanternVert.vert" />
+    <None Include="LightingFrag.frag" />
+    <None Include="LightingVert.vert" />
+    <None Include="ModelFrag.frag" />
+    <None Include="ModelVert.vert" />
     <None Include="packages.config" />
+    <None Include="ProcTexturingFrag.frag" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>

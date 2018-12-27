@@ -225,6 +225,7 @@ namespace ModelImporting
             renderObjects.Add(new RenderObject(model, transform, modelShader));
 
             // car
+            /*
             modelMatrix = new mat4(1);
             modelMatrix = glm.scale(modelMatrix, new vec3(0.06f, 0.06f, 0.06f));
             modelMatrix = glm.translate(modelMatrix, new vec3(-23, -16.1f, 18));
@@ -236,21 +237,52 @@ namespace ModelImporting
             model = new Model(@"..\..\Car\L200-OBJ.obj", "Car");
             texture = (uint)TextureUtil.LoadTexture(@"..\..\Car\truck_color_clean.jpg");
             model.SetCustomTexture(texture);
-            renderObjects.Add(new RenderObject(model, transform, modelShader));
+            renderObjects.Add(new RenderObject(model, transform, modelShader)); */
 
-            // lantern
+            // Drone
+            
             modelMatrix = new mat4(1);
-            modelMatrix = glm.translate(modelMatrix, new vec3(-3, 1.3f, -3.37f));
+            modelMatrix = glm.scale(modelMatrix, new vec3(0.6f, 0.6f, 0.6f));
+            modelMatrix = glm.translate(modelMatrix, new vec3(0, -3f, 0f));
+            modelMatrix = glm.rotate(modelMatrix, glm.radians(45), new vec3(0, 1, 0));
             transform = new Transform()
             {
                 ModelMatrix = modelMatrix
             };
-            model = new Model(@"..\..\Lantern\Gamelantern_updated.obj", "Lantern");
-            texture = (uint)TextureUtil.LoadTexture(@"..\..\Lantern\Old_lantern_UV_Diffuse.png");
+            model = new Model(@"..\..\Drone\Drone.obj", "Drone");
+            texture = (uint)TextureUtil.LoadTexture(@"..\..\Drone\winter_cam.jpg");
             model.SetCustomTexture(texture);
             renderObjects.Add(new RenderObject(model, transform, modelShader));
-            lighting.PointLights.Add(new Lighting.PointLight() { Position = new vec3(-3f, 1.3f, -3.37f) });
+
+            // lanterns
+            CreateLantern(-3, 1.3f, -6.87f);
+            CreateLantern(-6.87f, 1.3f, -4f, 90);
+            CreateLantern(-6.87f, 1.3f, 4f, 90);
+            CreateLantern(6.87f, 1.3f, -4f, -90);
+            CreateLantern(6.87f, 1.3f, 4f, -90);
+
+
+            //lighting.PointLights.Add(new Lighting.PointLight() { Position = new vec3(-3f, 1.3f, -6.80f) });
+            lighting.PointLights.Add(new Lighting.PointLight() { Position = new vec3(-6.8f, 1.3f, -4f) });
+            lighting.PointLights.Add(new Lighting.PointLight() { Position = new vec3(-6.8f, 1.3f, 4f) });
+            lighting.PointLights.Add(new Lighting.PointLight() { Position = new vec3(6.8f, 1.3f, -4f) });
+            lighting.PointLights.Add(new Lighting.PointLight() { Position = new vec3(6.8f, 1.3f, 4f) });
             RenderTimer.Start();
+        }
+
+        private void CreateLantern(float x, float y, float z, float angle=0)
+        {
+            var modelMatrix = new mat4(1);
+            modelMatrix = glm.translate(modelMatrix, new vec3(x, y, z));
+            modelMatrix = glm.rotate(modelMatrix, glm.radians(angle), new vec3(0, 1, 0));
+            var transform = new Transform()
+            {
+                ModelMatrix = modelMatrix
+            };
+            var model = new Model(@"..\..\Lantern\Gamelantern_updated.obj", "Lantern");
+            var texture = (uint)TextureUtil.LoadTexture(@"..\..\Lantern\Old_lantern_UV_Diffuse.png");
+            model.SetCustomTexture(texture);
+            renderObjects.Add(new RenderObject(model, transform, modelShader));
         }
 
         private void CreateRoom()
@@ -260,7 +292,7 @@ namespace ModelImporting
 
             var floor = new Plane(floorTexture, specularMap);
             var modelMatrix = new mat4(1);
-            modelMatrix = glm.scale(modelMatrix, new vec3(5f, 1f, 3.5f));
+            modelMatrix = glm.scale(modelMatrix, new vec3(7f, 1f, 7f));
             modelMatrix = glm.translate(modelMatrix, new vec3(0, -1, 0));
             modelMatrix = glm.rotate(modelMatrix, glm.radians(-90), new vec3(1, 0, 0));
             var transform = new Transform()
@@ -272,8 +304,8 @@ namespace ModelImporting
             var wallTexture = (uint)TextureUtil.LoadTexture(@"..\..\Wall.bmp");
             var wall1 = new Plane(wallTexture, specularMap);
             modelMatrix = new mat4(1);
-            modelMatrix = glm.scale(modelMatrix, new vec3(5f, 2f, 1f));
-            modelMatrix = glm.translate(modelMatrix, new vec3(0, 0.49f, -3.49f));
+            modelMatrix = glm.scale(modelMatrix, new vec3(7f, 2f, 1f));
+            modelMatrix = glm.translate(modelMatrix, new vec3(0, 0.49f, -6.99f));
             transform = new Transform()
             {
                 ModelMatrix = modelMatrix
@@ -282,8 +314,8 @@ namespace ModelImporting
 
             var wall2 = new Plane(wallTexture, specularMap);
             modelMatrix = new mat4(1);
-            modelMatrix = glm.scale(modelMatrix, new vec3(5f, 2f, 1f));
-            modelMatrix = glm.translate(modelMatrix, new vec3(0, 0.49f, 3.49f));
+            modelMatrix = glm.scale(modelMatrix, new vec3(7f, 2f, 1f));
+            modelMatrix = glm.translate(modelMatrix, new vec3(0, 0.49f, 6.99f));
             transform = new Transform()
             {
                 ModelMatrix = modelMatrix
@@ -293,8 +325,8 @@ namespace ModelImporting
             var wall3 = new Plane(wallTexture, specularMap);
             modelMatrix = new mat4(1);
             modelMatrix = glm.rotate(modelMatrix, glm.radians(90), new vec3(0, 1, 0));
-            modelMatrix = glm.scale(modelMatrix, new vec3(3.5f, 2f, 1f));
-            modelMatrix = glm.translate(modelMatrix, new vec3(0, 0.49f, -4.99f));
+            modelMatrix = glm.scale(modelMatrix, new vec3(7f, 2f, 1f));
+            modelMatrix = glm.translate(modelMatrix, new vec3(0, 0.49f, -6.99f));
             transform = new Transform()
             {
                 ModelMatrix = modelMatrix
@@ -304,8 +336,8 @@ namespace ModelImporting
             var wall4 = new Plane(wallTexture, specularMap);
             modelMatrix = new mat4(1);
             modelMatrix = glm.rotate(modelMatrix, glm.radians(-90), new vec3(0, 1, 0));
-            modelMatrix = glm.scale(modelMatrix, new vec3(3.5f, 2f, 1f));
-            modelMatrix = glm.translate(modelMatrix, new vec3(0, 0.49f, -4.99f));
+            modelMatrix = glm.scale(modelMatrix, new vec3(7f, 2f, 1f));
+            modelMatrix = glm.translate(modelMatrix, new vec3(0, 0.49f, -6.99f));
             transform = new Transform()
             {
                 ModelMatrix = modelMatrix
