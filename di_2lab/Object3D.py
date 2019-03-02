@@ -3,9 +3,9 @@ import copy
 from enum import Enum
 
 class Projection(Enum):
-    ORTHO_X = 1
-    ORTHO_Y = 2
-    ORTHO_Z = 3
+    ORTHO_XOY = 1
+    ORTHO_XOZ = 2
+    ORTHO_YOZ = 3
 
     ISOMETRIC = 4
     DIMETRIC = 5
@@ -17,11 +17,13 @@ class Projection(Enum):
 
 def point_transfrom(point, matrix):
     point = np.append(point, [1])
-    return np.dot(point, matrix)[:3]
+    row_transforamtion = np.dot(point, matrix)
+    homogenious_coords = row_transforamtion / row_transforamtion[3]
+    return homogenious_coords[:3]
 
 def make_clone(figure):
     points_copy = copy.deepcopy(figure.point_list)
-    return Figure(points_copy)
+    return Figure(points_copy, figure.edges)
 
 def get_x_rot_matrix(angle):
     cos_a = np.cos(angle)
@@ -58,9 +60,29 @@ def get_z_rot_matrix(angle):
 
 
 class Figure:
-    def __init__(self, point_list, edges = None):
-        self.point_list = point_list
-        self.edges = []
+    def __init__(self, point_list, edges=None):
+        self.point_list = np.array(point_list)
+        self.center_point = None
+        self.calc_center()
+        self.edges = edges
+
+    def calc_center(self):
+        mid_x = (max(self.point_list[:, 0]) + min(self.point_list[:, 0])) / 2
+        mid_y = (max(self.point_list[:, 1]) + min(self.point_list[:, 1])) / 2
+        mid_z = (max(self.point_list[:, 2]) + min(self.point_list[:, 2])) / 2
+        self.center_point = np.array([mid_x, mid_y, mid_z])
+
+    def take_xy_coords(self):
+        self.point_list = [np.take(x, [0, 1]) for x in self.point_list]
+        return self
+
+    def take_xz_coords(self):
+        self.point_list = [np.take(x, [0, 2]) for x in self.point_list]
+        return self
+
+    def take_yz_coords(self):
+        self.point_list = [np.take(x, [1, 2]) for x in self.point_list]
+        return self
 
     def transform(self, matrix):
         self.point_list = [point_transfrom(p, matrix) for p in self.point_list]
@@ -141,49 +163,58 @@ class Figure:
         perspective_mat = np.array([
             [0, 0, 0,    0],
             [0, 1, 0,    0],
-            [0, 0, 1, -1/d],
+            [0, 0, 1, 1/d],
             [0, 0, 0,    0]
         ])
         return self.get_projection(perspective_mat)
 
-    # TODO: fix matrix
-    def perspective_two_point(self, d=100):
+    def perspective_two_point(self, dy=100, dz=100):
         perspective_mat = np.array([
-            [0, 0, 0,    0],
-            [0, 1, 0,    0],
-            [0, 0, 1, -1/d],
-            [0, 0, 0,    0]
+            [0, 0, 0,     0],
+            [0, 1, 0, 1/dy],
+            [0, 0, 1, 1/dz],
+            [0, 0, 0,     0]
         ])
         return self.get_projection(perspective_mat)
 
-    # TODO: fix matrix
-    def perspective_three_point(self, d=100):
+    def perspective_three_point(self, dx=100, dy=100, dz=100):
         perspective_mat = np.array([
-            [0, 0, 0,    0],
-            [0, 1, 0,    0],
-            [0, 0, 1, -1/d],
-            [0, 0, 0,    0]
+            [0, 0, 0, 1/dx],
+            [0, 1, 0, 1/dy],
+            [0, 0, 1, 1/dz],
+            [0, 0, 0,     0]
         ])
         return self.get_projection(perspective_mat)
 
-    def project(self, projection_type):
-        # TODO: fix ortho names
-        if projection_type == Projection.ORTHO_X:
-            return self.orthographic_XOY()
-        elif projection_type == Projection.ORTHO_Y:
-            return self.orthographic_XOZ()
-        elif projection_type == Projection.ORTHO_Z:
-            return self.orthographic_YOZ()
-        elif projection_type == Projection.ISOMETRIC:
-            return self.isometric()
-        elif projection_type == Projection.DIMETRIC:
-            return self.dimetric()
-        elif projection_type == Projection.PERSPECTIVE_1:
-            return self.perspective_one_point()
-        elif projection_type == Projection.PERSPECTIVE_2:
-            return self.perspective_two_point()
-        elif projection_type == Projection.PERSPECTIVE_3:
-            return self.perspective_three_point()
+
+class Cube(Figure):
+    def __init__(self):
+        point_list = [
+            [0, 0, 0],
+            [0, 0, 1],
+            [0, 1, 0],
+            [1, 0, 0],
+            [0, 1, 1],
+            [1, 0, 1],
+            [1, 1, 0],
+            [1, 1, 1]
+        ]
+        edges = [
+            (0, 1),
+            (0, 2),
+            (0, 3),
+            (1, 4),
+            (1, 5),
+            (2, 4),
+            (2, 6),
+            (3, 5),
+            (3, 6),
+            (7, 4),
+            (7, 5),
+            (7, 6)
+        ]
+        Figure.__init__(self, point_list, edges)
+
 
 class Chair(Figure):
     def __init__(self):
