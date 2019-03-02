@@ -11,28 +11,75 @@ class WorkArea:
         self.figure = Cube()
         self.figure.scale(100, 100, 100)
         self.figure.shift(100, 100, 100)
-        # self.figure_list[0].scale(150, 150, 150)
         self.projection_type = Projection.ORTHO_XOY
 
         self.root = Tk()
         self.root.title("3DPRO")
         self.root.resizable(False, False)
 
-        self.eraser_button = Button(self.root, text='Clear', command=self.use_eraser)
-        self.eraser_button.grid(row=3, column=1)
-
-        self.redraw_button = Button(self.root, text='Redraw', command=self.redraw_all)
-        self.redraw_button.grid(row=2, column=1)
-
         self.canvas = Canvas(self.root, bg='white', width=self.DEFAULT_WIDTH, height=self.DEFAULT_WIDTH)
         self.canvas.grid(row=1, columnspan=10)
         self.image = Image.new('RGB', (self.DEFAULT_WIDTH, self.DEFAULT_HEIGHT), 'white')
         self.draw = ImageDraw.Draw(self.image)
 
+        Label(self.root, text="Тип проекции:             ").grid(row=2, column=1)
+        self.projection_var = StringVar(self.root)
+        self.projection_var.set("orthographic_xoy")  # default value
+        possible_projections = ["orthographic_xoy",
+                                "orthographic_xoz",
+                                "orthographic_yoz",
+                                "isometric",
+                                "dimetric",
+                                "perspective_one",
+                                "perspective_two",
+                                "perspective_three"]
+        self.choose_projection = OptionMenu(self.root, self.projection_var, *possible_projections)
+        self.choose_projection.grid(row=3, column=1)
+
+        self.projection_button = Button(self.root, text='Apply', command=self.select_projection)
+        self.projection_button.grid(row=4, column=1)
+
         Label(self.root, text="x: ").grid(row=2, column=2)
         Label(self.root, text="y: ").grid(row=3, column=2)
         Label(self.root, text="z: ").grid(row=4, column=2)
-        Label(self.root, text="x_angle: ").grid(row=2, column=4)
+
+        self.x_input_box = Entry(self.root)
+        self.y_input_box = Entry(self.root)
+        self.z_input_box = Entry(self.root)
+        self.x_input_box.insert(0, "100")
+        self.y_input_box.insert(0, "100")
+        self.z_input_box.insert(0, "100")
+        self.x_input_box.grid(row=2, column=3)
+        self.y_input_box.grid(row=3, column=3)
+        self.z_input_box.grid(row=4, column=3)
+        self.shift_button = Button(self.root, text='Shift', command=self.shift).grid(row=5, column=3)
+
+        Label(self.root, text="angle: ").grid(row=2, column=6)
+        self.angle_input_box = Entry(self.root)
+        self.angle_input_box.insert(0, "45")
+        self.angle_input_box.grid(row=3, column=6)
+
+        # TODO: do a functions for this buttons
+        self.x_rotate_button = Button(self.root, text='rotate about x', command=self.shift).grid(row=4, column=6)
+        self.y_rotate_button = Button(self.root, text='rotate about y', command=self.shift).grid(row=5, column=6)
+        self.z_rotate_button = Button(self.root, text='rotate about z', command=self.shift).grid(row=6, column=6)
+
+        Label(self.root, text="kx: ").grid(row=2, column=4)
+        Label(self.root, text="ky: ").grid(row=3, column=4)
+        Label(self.root, text="kz: ").grid(row=4, column=4)
+
+        self.kx_input_box = Entry(self.root)
+        self.ky_input_box = Entry(self.root)
+        self.kz_input_box = Entry(self.root)
+        self.kx_input_box.insert(0, "1")
+        self.ky_input_box.insert(0, "1")
+        self.kz_input_box.insert(0, "1")
+        self.kx_input_box.grid(row=2, column=5)
+        self.ky_input_box.grid(row=3, column=5)
+        self.kz_input_box.grid(row=4, column=5)
+        self.scale_button = Button(self.root, text='Scale', command=self.scale).grid(row=5, column=5)
+
+        '''Label(self.root, text="x_angle: ").grid(row=2, column=4)
         Label(self.root, text="y_angle: ").grid(row=3, column=4)
         Label(self.root, text="z_angle: ").grid(row=4, column=4)
 
@@ -46,16 +93,13 @@ class WorkArea:
         self.z1_input_box = Entry(self.root)
         self.z1_input_box.insert(0, "120")
 
-        self.z1_input_box.grid(row=10, column=3)
+        self.z1_input_box.grid(row=10, column=3)'''
 
-        Label(self.root, text="x1: ").grid(row=8, column=2)
-        Label(self.root, text="y1: ").grid(row=9, column=2)
-        Label(self.root, text="z1: ").grid(row=10, column=2)
+        self.eraser_button = Button(self.root, text='Clear', command=self.use_eraser)
+        self.eraser_button.grid(row=3, column=8)
 
-        Label(self.root, text="angle: ").grid(row=8, column=4)
-        self.angle_input_box = Entry(self.root)
-        self.angle_input_box.insert(0, "45")
-        self.angle_input_box.grid(row=9, column=4)
+        self.redraw_button = Button(self.root, text='Redraw', command=self.redraw_all)
+        self.redraw_button.grid(row=2, column=8)
 
         self.root.mainloop()
 
@@ -82,7 +126,21 @@ class WorkArea:
         elif projection_type == Projection.PERSPECTIVE_3:
             return figure.perspective_three_point().take_xy_coords()
 
-    def translate(self):
+    def select_projection(self):
+        projection_dict = {
+            "orthographic_xoy": Projection.ORTHO_XOY,
+            "orthographic_xoz": Projection.ORTHO_XOZ,
+            "orthographic_yoz": Projection.ORTHO_YOZ,
+            "isometric": Projection.ISOMETRIC,
+            "dimetric": Projection.DIMETRIC,
+            "perspective_one": Projection.PERSPECTIVE_1,
+            "perspective_two": Projection.PERSPECTIVE_2,
+            "perspective_three": Projection.PERSPECTIVE_3,
+        }
+        self.projection_type = projection_dict[self.projection_var.get()]
+        self.redraw_all()
+
+    def shift(self):
         figure = self.figure
         dx = float(self.x_input_box.get())
         dy = float(self.y_input_box.get())
@@ -93,21 +151,13 @@ class WorkArea:
 
     def scale(self):
         figure = self.figure
-        mx = float(self.x_input_box.get())
-        my = float(self.y_input_box.get())
-        mz = float(self.z_input_box.get())
+        mx = float(self.kx_input_box.get())
+        my = float(self.ky_input_box.get())
+        mz = float(self.kz_input_box.get())
         figure.scale(mx, my, mz)
         print("success scale mx={} my={} mz={}".format(mx, my, mz))
         self.redraw_all()
 
-    def center_scale(self):
-        figure = self.figure
-        mx = float(self.x_input_box.get())
-        my = float(self.y_input_box.get())
-        mz = float(self.z_input_box.get())
-        figure.center_scale(mx, my, mz)
-        print("success center scale mx={} my={} mz={}".format(mx, my, mz))
-        self.redraw_all()
 
     def redraw_all(self):
         self.use_eraser()
