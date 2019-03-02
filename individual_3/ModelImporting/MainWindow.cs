@@ -198,7 +198,7 @@ namespace ModelImporting
 
             CreateRoom();
 
-            // nanosuit
+            // nanosuit            
             var model = new Model(@"..\..\NanosuitModel\nanosuit.obj", "NanosuitModel");
             mat4 modelMatrix = new mat4(1);
             modelMatrix = glm.scale(modelMatrix, new vec3(0.15f, 0.15f, 0.15f));
@@ -211,6 +211,7 @@ namespace ModelImporting
             renderObjects.Add(new RenderObject(model, transform, modelShader));
 
             // girl
+            /*
             modelMatrix = new mat4(1);
             modelMatrix = glm.scale(modelMatrix, new vec3(0.01f, 0.01f, 0.01f));
             modelMatrix = glm.translate(modelMatrix, new vec3(300, -100.9f, -45));
@@ -222,7 +223,7 @@ namespace ModelImporting
             model = new Model(@"..\..\Girl\10016_w_Myriam_30k.OBJ", "Girl");
             var texture = (uint)TextureUtil.LoadTexture(@"..\..\Girl\10016_w_Myriam_Body_D_2k.jpg");
             model.SetCustomTexture(texture);
-            renderObjects.Add(new RenderObject(model, transform, modelShader));
+            renderObjects.Add(new RenderObject(model, transform, modelShader));*/
 
             // car
             /*
@@ -239,18 +240,44 @@ namespace ModelImporting
             model.SetCustomTexture(texture);
             renderObjects.Add(new RenderObject(model, transform, modelShader)); */
 
-            // Drone
-            
+            // Drone       
+            /*
             modelMatrix = new mat4(1);
             modelMatrix = glm.scale(modelMatrix, new vec3(0.6f, 0.6f, 0.6f));
             modelMatrix = glm.translate(modelMatrix, new vec3(0, -3f, 0f));
-            modelMatrix = glm.rotate(modelMatrix, glm.radians(45), new vec3(0, 1, 0));
+            modelMatrix = glm.rotate(modelMatrix, glm.radians(-45), new vec3(0, 1, 0));
             transform = new Transform()
             {
                 ModelMatrix = modelMatrix
             };
             model = new Model(@"..\..\Drone\Drone.obj", "Drone");
             texture = (uint)TextureUtil.LoadTexture(@"..\..\Drone\winter_cam.jpg");
+            model.SetCustomTexture(texture);
+            renderObjects.Add(new RenderObject(model, transform, modelShader)); */
+
+            // House1
+            modelMatrix = new mat4(1);
+            modelMatrix = glm.scale(modelMatrix, new vec3(0.01f, 0.01f, 0.01f));
+            modelMatrix = glm.translate(modelMatrix, new vec3(-4, -100, -4f));
+            modelMatrix = glm.rotate(modelMatrix, glm.radians(0), new vec3(0, 1, 0));
+            transform = new Transform()
+            {
+                ModelMatrix = modelMatrix
+            };
+            model = new Model(@"..\..\House1\Barrack.obj", "House1");
+            model.SetCustomTexture(texture);
+            renderObjects.Add(new RenderObject(model, transform, modelShader));
+
+            // Prison
+            modelMatrix = new mat4(1);
+            modelMatrix = glm.scale(modelMatrix, new vec3(0.006f, 0.006f, 0.006f));
+            modelMatrix = glm.translate(modelMatrix, new vec3(-1, 3f, -4f));
+            modelMatrix = glm.rotate(modelMatrix, glm.radians(0), new vec3(0, 1, 0));
+            transform = new Transform()
+            {
+                ModelMatrix = modelMatrix
+            };
+            model = new Model(@"..\..\House2\OldHouse.obj", "House2");
             model.SetCustomTexture(texture);
             renderObjects.Add(new RenderObject(model, transform, modelShader));
 
@@ -301,7 +328,7 @@ namespace ModelImporting
             };
             renderObjects.Add(new RenderObject(floor, transform, modelShader));
 
-            var wallTexture = (uint)TextureUtil.LoadTexture(@"..\..\Wall.bmp");
+            var wallTexture = (uint)TextureUtil.LoadTexture(@"..\..\Berlin.jpg");
             var wall1 = new Plane(wallTexture, specularMap);
             modelMatrix = new mat4(1);
             modelMatrix = glm.scale(modelMatrix, new vec3(7f, 2f, 1f));
@@ -438,6 +465,11 @@ namespace ModelImporting
                 (float)(Math.Cos(glm.radians(camera.Pitch)) * Math.Sin(glm.radians(camera.Yaw))));
 
             camera.Front = glm.normalize(front);
+        }
+
+        private void MainWindow_Load(object sender, EventArgs e)
+        {
+
         }
     }
 }
