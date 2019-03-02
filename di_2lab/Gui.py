@@ -8,11 +8,13 @@ class WorkArea:
     DEFAULT_COLOR = 'black'
 
     def __init__(self):
-        # self.figure = Cube()
-        # self.figure.scale(100, 100, 100)
-        # self.figure.shift(100, 100, 300)
         self.figure = Chair()
         self.figure.scale(0.7, 0.7, 0.7)
+        mid_x, mid_y, mid_z = self.figure.center_point
+        self.figure.shift(-mid_x, -mid_y, -mid_z)
+        self.figure.rotate_x_axis(np.pi)
+        self.figure.shift(mid_x, mid_y, mid_z)
+        self.figure.shift(100, 100, 100)
         self.projection_type = Projection.ORTHO_XOY
 
         self.root = Tk()
@@ -80,22 +82,6 @@ class WorkArea:
         self.ky_input_box.grid(row=3, column=5)
         self.kz_input_box.grid(row=4, column=5)
         self.scale_button = Button(self.root, text='Scale', command=self.scale).grid(row=5, column=5)
-
-        '''Label(self.root, text="x_angle: ").grid(row=2, column=4)
-        Label(self.root, text="y_angle: ").grid(row=3, column=4)
-        Label(self.root, text="z_angle: ").grid(row=4, column=4)
-
-        self.x_input_box = Entry(self.root)
-        self.y_input_box = Entry(self.root)
-        self.z_input_box = Entry(self.root)
-
-        self.x_input_box.insert(0, "100")
-        self.y_input_box.insert(0, "100")
-        self.z_input_box.insert(0, "100")
-        self.z1_input_box = Entry(self.root)
-        self.z1_input_box.insert(0, "120")
-
-        self.z1_input_box.grid(row=10, column=3)'''
 
         self.eraser_button = Button(self.root, text='Clear', command=self.erase)
         self.eraser_button.grid(row=3, column=8)

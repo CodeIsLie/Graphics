@@ -232,8 +232,31 @@ class Cube(Figure):
 
 
 class Hole(Figure):
-    def __init__(self):
-        pass
+    """
+    единичная длина
+    """
+    def __init__(self, segments_count):
+        angle_step = (np.pi/180) * 360 / segments_count
+        first_point = np.array([1, 0, 0])
+        first_behind_point = np.array([1, 0, 1])
+
+        points = [first_point, first_behind_point]
+        edges = [(0, 1), (0, 2), (1, 3)]
+        current_angle = 0
+        index = 0
+        all_cnt_points = 2*segments_count
+        for _ in range(segments_count):
+            current_angle += angle_step
+            index += 2
+            new_point = np.array([np.cos(current_angle), np.sin(current_angle), 0])
+            behind_point = new_point + np.array([0, 0, 1])
+            points.append(new_point)
+            points.append(behind_point)
+
+            edges += [(index, index+1), (index, (index+2) % all_cnt_points),
+                      (index+1, (index+3) % all_cnt_points)]
+
+        Figure.__init__(self, points, edges)
 
 class Chair(Figure):
     def __init__(self):
@@ -273,7 +296,10 @@ class Chair(Figure):
 
         leg_1.shift(20, 0, 230)
 
-        hole = Hole()
+        hole = Hole(40)
+        hole.scale(35, 35, 60)
+        hole.shift(137, 490, 0)
+
         offset = 0
         all_points = []
         all_edges = []
