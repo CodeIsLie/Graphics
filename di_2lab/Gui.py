@@ -10,7 +10,7 @@ class WorkArea:
     def __init__(self):
         self.figure = Cube()
         self.figure.scale(100, 100, 100)
-        self.figure.shift(100, 100, 100)
+        self.figure.shift(100, 100, 300)
         self.projection_type = Projection.ORTHO_XOY
 
         self.root = Tk()
@@ -60,9 +60,9 @@ class WorkArea:
         self.angle_input_box.grid(row=3, column=6)
 
         # TODO: do a functions for this buttons
-        self.x_rotate_button = Button(self.root, text='rotate about x', command=self.shift).grid(row=4, column=6)
-        self.y_rotate_button = Button(self.root, text='rotate about y', command=self.shift).grid(row=5, column=6)
-        self.z_rotate_button = Button(self.root, text='rotate about z', command=self.shift).grid(row=6, column=6)
+        self.x_rotate_button = Button(self.root, text='rotate about x', command=self.x_rotate).grid(row=4, column=6)
+        self.y_rotate_button = Button(self.root, text='rotate about y', command=self.y_rotate).grid(row=5, column=6)
+        self.z_rotate_button = Button(self.root, text='rotate about z', command=self.z_rotate).grid(row=6, column=6)
 
         Label(self.root, text="kx: ").grid(row=2, column=4)
         Label(self.root, text="ky: ").grid(row=3, column=4)
@@ -95,11 +95,13 @@ class WorkArea:
 
         self.z1_input_box.grid(row=10, column=3)'''
 
-        self.eraser_button = Button(self.root, text='Clear', command=self.use_eraser)
+        self.eraser_button = Button(self.root, text='Clear', command=self.erase)
         self.eraser_button.grid(row=3, column=8)
 
         self.redraw_button = Button(self.root, text='Redraw', command=self.redraw_all)
         self.redraw_button.grid(row=2, column=8)
+
+        self.redraw_all()
 
         self.root.mainloop()
 
@@ -149,6 +151,16 @@ class WorkArea:
         print("success translate dx={} dy={} dz={}".format(dx, dy, dz))
         self.redraw_all()
 
+    def center_transform(func):
+        def magic(self):
+            mid_x, mid_y, mid_z = self.figure.center_point
+            self.figure.shift(-mid_x, -mid_y, -mid_z)
+            func(self)
+            self.figure.shift(mid_x, mid_y, mid_z)
+            self.redraw_all()
+        return magic
+
+    @center_transform
     def scale(self):
         figure = self.figure
         mx = float(self.kx_input_box.get())
@@ -156,11 +168,24 @@ class WorkArea:
         mz = float(self.kz_input_box.get())
         figure.scale(mx, my, mz)
         print("success scale mx={} my={} mz={}".format(mx, my, mz))
-        self.redraw_all()
 
+    @center_transform
+    def x_rotate(self):
+        angle = float(self.angle_input_box.get()) * np.pi/ 180
+        self.figure.rotate_x_axis(angle)
+
+    @center_transform
+    def y_rotate(self):
+        angle = float(self.angle_input_box.get()) * np.pi/ 180
+        self.figure.rotate_y_axis(angle)
+
+    @center_transform
+    def z_rotate(self):
+        angle = float(self.angle_input_box.get()) * np.pi/ 180
+        self.figure.rotate_z_axis(angle)
 
     def redraw_all(self):
-        self.use_eraser()
+        self.erase()
         # self.figure.draw(self.draw, self.projection)
         figure_projection = self.project()
         for point_ind1, point_ind2 in figure_projection.edges:
@@ -171,7 +196,7 @@ class WorkArea:
         self.canvas.image = ImageTk.PhotoImage(self.image)
         self.canvas.create_image(0, 0, image=self.canvas.image, anchor='nw')
 
-    def use_eraser(self):
+    def erase(self):
         self.canvas.delete("all")
         self.image = Image.new('RGB', (self.DEFAULT_WIDTH, self.DEFAULT_WIDTH), 'white')
         self.draw = ImageDraw.Draw(self.image)

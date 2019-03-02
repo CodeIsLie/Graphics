@@ -16,14 +16,27 @@ class Projection(Enum):
 
 
 def point_transfrom(point, matrix):
+    row_transformation = None
     point = np.append(point, [1])
-    row_transforamtion = np.dot(point, matrix)
-    homogenious_coords = row_transforamtion / row_transforamtion[3]
+    row_transformation = np.dot(point, matrix)
+    if abs(row_transformation[3]) < 1e-10:
+        x = 5
+    homogenious_coords = row_transformation / row_transformation[3]
+
     return homogenious_coords[:3]
 
 def make_clone(figure):
     points_copy = copy.deepcopy(figure.point_list)
     return Figure(points_copy, figure.edges)
+
+def get_shift_matrix(dx, dy, dz):
+    shift_matrix = np.array([
+        [1, 0, 0, 0],
+        [0, 1, 0, 0],
+        [0, 0, 1, 0],
+        [dx, dy, dz, 1]
+    ])
+    return shift_matrix
 
 def get_x_rot_matrix(angle):
     cos_a = np.cos(angle)
@@ -85,6 +98,7 @@ class Figure:
         return self
 
     def transform(self, matrix):
+        self.center_point = point_transfrom(self.center_point, matrix)
         self.point_list = [point_transfrom(p, matrix) for p in self.point_list]
 
     def scale(self, kx, ky, kz):
@@ -97,12 +111,7 @@ class Figure:
         self.transform(scale_matrix)
 
     def shift(self, dx, dy, dz):
-        shift_matrix = np.array([
-            [1,  0,  0,  0],
-            [0,  1,  0,  0],
-            [0,  0,  1,  0],
-            [dx, dy, dz, 1]
-        ])
+        shift_matrix = get_shift_matrix(dx, dy, dz)
         self.transform(shift_matrix)
 
     def rotate_x_axis(self, angle):
@@ -150,36 +159,39 @@ class Figure:
         return self.get_projection(ortho_matrix)
 
     def isometric(self):
-        isometric_mat = np.dot(get_x_rot_matrix(np.pi*2/3),
-                               get_y_rot_matrix(np.pi*2/3))
-        return self.get_projection(isometric_mat)
+        isometric_mat = np.dot(get_x_rot_matrix(np.pi*45/180),
+                               get_y_rot_matrix(np.pi*35.264/180))
+        dx, dy, dz = self.center_point
+        matrix = np.dot(np.dot(get_shift_matrix(-dx, -dy, -dz), isometric_mat), get_shift_matrix(dx, dy, dz))
+        projection = self.get_projection(matrix)
+        return projection
 
     def dimetric(self):
         dimetric_mat = np.dot(get_x_rot_matrix(np.pi * 2 / 3),
                                get_y_rot_matrix(np.pi * 2 / 3))
         return self.get_projection(dimetric_mat)
 
-    def perspective_one_point(self, d=100):
+    def perspective_one_point(self, d=300):
         perspective_mat = np.array([
-            [0, 0, 0,    0],
-            [0, 1, 0,    0],
+            [1, 0, 0,   0],
+            [0, 1, 0,   0],
             [0, 0, 1, 1/d],
-            [0, 0, 0,    0]
+            [0, 0, 0,   1]
         ])
         return self.get_projection(perspective_mat)
 
-    def perspective_two_point(self, dy=100, dz=100):
+    def perspective_two_point(self, dy=300, dz=300):
         perspective_mat = np.array([
-            [0, 0, 0,     0],
+            [1, 0, 0,     0],
             [0, 1, 0, 1/dy],
             [0, 0, 1, 1/dz],
             [0, 0, 0,     0]
         ])
         return self.get_projection(perspective_mat)
 
-    def perspective_three_point(self, dx=100, dy=100, dz=100):
+    def perspective_three_point(self, dx=300, dy=300, dz=300):
         perspective_mat = np.array([
-            [0, 0, 0, 1/dx],
+            [1, 0, 0, 1/dx],
             [0, 1, 0, 1/dy],
             [0, 0, 1, 1/dz],
             [0, 0, 0,     0]
