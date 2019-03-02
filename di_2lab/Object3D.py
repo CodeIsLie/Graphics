@@ -110,6 +110,12 @@ class Figure:
         ])
         self.transform(scale_matrix)
 
+    def scale_center(self, kx, ky, kz):
+        mid_x, mid_y, mid_z = self.center_point
+        self.shift(-mid_x, -mid_y, -mid_z)
+        self.scale(kx, ky, kz)
+        self.shift(mid_x, mid_y, mid_z)
+
     def shift(self, dx, dy, dz):
         shift_matrix = get_shift_matrix(dx, dy, dz)
         self.transform(shift_matrix)
@@ -125,6 +131,27 @@ class Figure:
     def rotate_z_axis(self, angle):
         rotation_matrix = get_z_rot_matrix(angle)
         self.transform(rotation_matrix)
+
+    def rotate_x_axis_center(self, angle):
+        mid_x, mid_y, mid_z = self.center_point
+        self.shift(-mid_x, -mid_y, -mid_z)
+        rotation_matrix = get_x_rot_matrix(angle)
+        self.transform(rotation_matrix)
+        self.shift(mid_x, mid_y, mid_z)
+
+    def rotate_y_axis_center(self, angle):
+        mid_x, mid_y, mid_z = self.center_point
+        self.shift(-mid_x, -mid_y, -mid_z)
+        rotation_matrix = get_y_rot_matrix(angle)
+        self.transform(rotation_matrix)
+        self.shift(mid_x, mid_y, mid_z)
+
+    def rotate_z_axis_center(self, angle):
+        mid_x, mid_y, mid_z = self.center_point
+        self.shift(-mid_x, -mid_y, -mid_z)
+        rotation_matrix = get_z_rot_matrix(angle)
+        self.transform(rotation_matrix)
+        self.shift(mid_x, mid_y, mid_z)
 
     def get_projection(self, matrix):
         clone = make_clone(self)
@@ -174,7 +201,7 @@ class Figure:
         projection = self.get_projection(matrix)
         return projection
 
-    def perspective_one_point(self, d=300):
+    def perspective_one_point(self, d=200):
         perspective_mat = np.array([
             [1, 0, 0,   0],
             [0, 1, 0,   0],
@@ -183,7 +210,7 @@ class Figure:
         ])
         return self.get_projection(perspective_mat)
 
-    def perspective_two_point(self, dy=300, dz=300):
+    def perspective_two_point(self, dy=200, dz=200):
         perspective_mat = np.array([
             [1, 0, 0,     0],
             [0, 1, 0, 1/dy],
@@ -192,7 +219,7 @@ class Figure:
         ])
         return self.get_projection(perspective_mat)
 
-    def perspective_three_point(self, dx=300, dy=300, dz=300):
+    def perspective_three_point(self, dx=200, dy=200, dz=200):
         perspective_mat = np.array([
             [1, 0, 0, 1/dx],
             [0, 1, 0, 1/dy],
@@ -284,7 +311,7 @@ class Chair(Figure):
 
         leg_2 = make_clone(leg_1)
         leg_2.rotate_y_axis(90*np.pi/180)
-        leg_2.shift(230, 0, 260)
+        leg_2.shift(230, 0, 255)
 
         leg_3 = make_clone(leg_1)
         leg_3.rotate_y_axis(180*np.pi/180)

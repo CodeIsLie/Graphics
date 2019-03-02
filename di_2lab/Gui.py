@@ -9,14 +9,14 @@ class WorkArea:
 
     def __init__(self):
         self.figure = Chair()
+        print(self.figure.point_list)
+        print(self.figure.edges)
         self.figure.scale(0.7, 0.7, 0.7)
-        mid_x, mid_y, mid_z = self.figure.center_point
-        self.figure.shift(-mid_x, -mid_y, -mid_z)
-        self.figure.rotate_x_axis(np.pi)
-        self.figure.shift(mid_x, mid_y, mid_z)
-        self.figure.shift(100, 100, 100)
+        self.figure.rotate_x_axis_center(np.pi)
+        self.figure.shift(100, 100, 130)
         self.projection_type = Projection.ORTHO_XOY
 
+        self.iso_mode = "iso_1"
         self.root = Tk()
         self.root.title("3DPRO")
         self.root.resizable(False, False)
@@ -63,7 +63,6 @@ class WorkArea:
         self.angle_input_box.insert(0, "45")
         self.angle_input_box.grid(row=3, column=6)
 
-        # TODO: do a functions for this buttons
         self.x_rotate_button = Button(self.root, text='rotate about x', command=self.x_rotate).grid(row=4, column=6)
         self.y_rotate_button = Button(self.root, text='rotate about y', command=self.y_rotate).grid(row=5, column=6)
         self.z_rotate_button = Button(self.root, text='rotate about z', command=self.z_rotate).grid(row=6, column=6)
@@ -88,6 +87,9 @@ class WorkArea:
 
         self.redraw_button = Button(self.root, text='Redraw', command=self.redraw_all)
         self.redraw_button.grid(row=2, column=8)
+
+        self.redraw_button = Button(self.root, text='Next', command=self.next_perspective)
+        self.redraw_button.grid(row=4, column=8)
 
         self.redraw_all()
 
@@ -171,6 +173,65 @@ class WorkArea:
     def z_rotate(self):
         angle = float(self.angle_input_box.get()) * np.pi/ 180
         self.figure.rotate_z_axis(angle)
+
+    def next_perspective(self):
+        if self.projection_var.get() == "orthographic_xoy":
+            self.projection_var.set("orthographic_xoz")
+        elif self.projection_var.get() == "orthographic_xoz":
+            self.x_rotate()
+            self.x_rotate()
+            self.projection_var.set("orthographic_yoz")
+        elif self.projection_var.get() == "orthographic_yoz":
+            for _ in range(6):
+                self.x_rotate()
+            self.projection_var.set("isometric")
+        elif self.projection_var.get() == "isometric" and self.iso_mode == "iso_1":
+            self.kx_input_box.delete(0, END)
+            self.kx_input_box.insert(0, "0.5")
+            self.scale()
+            self.iso_mode = "iso_2"
+        elif self.projection_var.get() == "isometric" and self.iso_mode == "iso_2":
+            self.kx_input_box.delete(0, END)
+            self.kx_input_box.insert(0, "2.0")
+            self.ky_input_box.delete(0, END)
+            self.ky_input_box.insert(0, "0.5")
+            self.scale()
+            self.iso_mode = "iso_3"
+        elif self.projection_var.get() == "isometric" and self.iso_mode == "iso_3":
+            self.kx_input_box.delete(0, END)
+            self.kx_input_box.insert(0, "1.0")
+            self.ky_input_box.delete(0, END)
+            self.ky_input_box.insert(0, "2.0")
+            self.scale()
+            self.projection_var.set("dimetric")
+        elif self.projection_var.get() == "dimetric":
+            self.kx_input_box.delete(0, END)
+            self.ky_input_box.delete(0, END)
+            self.kz_input_box.delete(0, END)
+
+            self.kx_input_box.insert(0, "1.4")
+            self.ky_input_box.insert(0, "1.4")
+            self.kz_input_box.insert(0, "1.4")
+            self.scale()
+
+            self.angle_input_box.delete(0, END)
+            self.angle_input_box.insert(0, "70")
+            self.y_rotate()
+
+            self.projection_var.set("perspective_one")
+        elif self.projection_var.get() == "perspective_one":
+            self.figure = Chair()
+            self.figure.rotate_x_axis_center(115 * np.pi/180)
+            self.figure.scale_center(1.2, 1.2, 1.2)
+            self.figure.shift(200, 200, 20)
+            self.projection_var.set("perspective_two")
+        elif self.projection_var.get() == "perspective_two":
+            # self.figure = Chair()
+            self.figure.scale_center(1.5, 1.5, 1.5)
+            self.figure.rotate_x_axis_center(15 * np.pi/180)
+            self.projection_var.set("perspective_three")
+
+        self.select_projection()
 
     def redraw_all(self):
         self.erase()
