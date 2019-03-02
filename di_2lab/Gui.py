@@ -8,9 +8,11 @@ class WorkArea:
     DEFAULT_COLOR = 'black'
 
     def __init__(self):
-        self.figure = Cube()
-        self.figure.scale(100, 100, 100)
-        self.figure.shift(100, 100, 300)
+        # self.figure = Cube()
+        # self.figure.scale(100, 100, 100)
+        # self.figure.shift(100, 100, 300)
+        self.figure = Chair()
+        self.figure.scale(0.7, 0.7, 0.7)
         self.projection_type = Projection.ORTHO_XOY
 
         self.root = Tk()

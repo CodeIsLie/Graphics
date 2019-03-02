@@ -159,17 +159,20 @@ class Figure:
         return self.get_projection(ortho_matrix)
 
     def isometric(self):
-        isometric_mat = np.dot(get_x_rot_matrix(np.pi*45/180),
-                               get_y_rot_matrix(np.pi*35.264/180))
+        isometric_mat = np.dot(get_y_rot_matrix(np.pi*45/180),
+                               get_x_rot_matrix(np.pi*35.264/180))
         dx, dy, dz = self.center_point
         matrix = np.dot(np.dot(get_shift_matrix(-dx, -dy, -dz), isometric_mat), get_shift_matrix(dx, dy, dz))
         projection = self.get_projection(matrix)
         return projection
 
     def dimetric(self):
-        dimetric_mat = np.dot(get_x_rot_matrix(np.pi * 2 / 3),
-                               get_y_rot_matrix(np.pi * 2 / 3))
-        return self.get_projection(dimetric_mat)
+        dimetric_mat = np.dot(get_y_rot_matrix(np.pi*45/180),
+                              get_x_rot_matrix(np.pi*30.0/180))
+        dx, dy, dz = self.center_point
+        matrix = np.dot(np.dot(get_shift_matrix(-dx, -dy, -dz), dimetric_mat), get_shift_matrix(dx, dy, dz))
+        projection = self.get_projection(matrix)
+        return projection
 
     def perspective_one_point(self, d=300):
         perspective_mat = np.array([
@@ -228,22 +231,55 @@ class Cube(Figure):
         Figure.__init__(self, point_list, edges)
 
 
+class Hole(Figure):
+    def __init__(self):
+        pass
+
 class Chair(Figure):
     def __init__(self):
-        seat = []
-        leg_1 = []
-        leg_2 = []
-        leg_3 = []
-        leg_4 = []
+        seat = Cube()
+        seat.scale(275, 50, 275)
+        seat.shift(0, 200, 0)
 
-        backrest_leg_left = []
-        backrest_leg_right = []
-        backrest = []
+        backrest = Cube()
+        backrest.scale(275, 140, 60)
+        backrest.shift(0, 420, 0)
 
-        hole = []
+        backrest_leg_left = Cube()
+        backrest_leg_left.scale(25, 170, 25)
+        backrest_leg_left.shift(20, 250, 20)
 
-        point_list = seat + leg_1 + leg_2 + leg_3 + leg_4 \
-                     + backrest_leg_left + backrest_leg_right + backrest + hole
+        backrest_leg_right = make_clone(backrest_leg_left)
+        backrest_leg_right.shift(210, 0, 0)
 
-        edges = []
-        Figure.__init__(self, point_list, edges)
+        leg_1 = Cube()
+        leg_1.scale(25, 200, 25)
+        leg_1.point_list[0][2] += 10
+        leg_1.point_list[5][0] -= 10
+        leg_1.point_list[3][2] += 10
+        leg_1.point_list[3][0] -= 10
+
+        leg_2 = make_clone(leg_1)
+        leg_2.rotate_y_axis(90*np.pi/180)
+        leg_2.shift(230, 0, 260)
+
+        leg_3 = make_clone(leg_1)
+        leg_3.rotate_y_axis(180*np.pi/180)
+        leg_3.shift(255, 0, 45)
+
+        leg_4 = make_clone(leg_1)
+        leg_4.rotate_y_axis(270*np.pi/180)
+        leg_4.shift(45, 0, 20)
+
+        leg_1.shift(20, 0, 230)
+
+        hole = Hole()
+        offset = 0
+        all_points = []
+        all_edges = []
+        for obj in [seat, leg_1, leg_2, leg_3, leg_4, backrest_leg_left, backrest_leg_right,
+                    backrest, hole]:
+            all_points += obj.point_list
+            all_edges += [(x+offset, y+offset) for x, y in obj.edges]
+            offset += 8
+        Figure.__init__(self, all_points, all_edges)
