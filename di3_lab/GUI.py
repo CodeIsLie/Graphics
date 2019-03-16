@@ -2,32 +2,12 @@ from Object3D import *
 from tkinter import *
 from PIL import Image, ImageTk, ImageDraw
 
-
-f_points = [(16.50, 0),
-            (15.00, 1.7),
-            (13.5, 3.15),
-            (12.0, 4.27),
-            (10.5, 5.05),
-            (9.0, 5.45),
-            (7.5, 5.45),
-            (6.0, 5.05),
-            (4.5, 4.27),
-            (3.0, 3.15),
-            (1.5, 1.7),
-            (0, 0)]
-
-g_points = [(16.50, 5.44),
-            (15.00, 5.24),
-            (13.5, 5.02),
-            (12.0, 4.73),
-            (10.5, 4.32),
-            (9.0, 2.75),
-            (7.5, 1.17),
-            (6.0, 0.76),
-            (4.5, 0.47),
-            (3.0, 0.25),
-            (1.5, 0.058),
-            (0, 0)]
+f_points = [(60, 300), (100, 250), (140, 225), (180, 200), (220, 184), (260, 167), (300, 156), (340, 144), (380, 138),
+            (420, 135), (460, 135), (500, 138), (540, 144), (580, 156), (620, 167), (660, 184), (700, 200), (740, 225),
+            (780, 250), (820, 300)]
+g_points = [(60, 130), (140, 132), (220, 133), (300, 135), (340, 136), (380, 140), (400, 150), (420, 164), (427, 195),
+            (434, 232), (440, 250), (460, 270), (480, 277), (500, 280), (540, 285), (580, 286), (620, 287), (660, 290),
+            (740, 291), (820, 293)]
 
 
 class WorkArea:
@@ -39,7 +19,7 @@ class WorkArea:
         self.figure = LinedSurface(f_points, g_points)
         print(self.figure.point_list)
         print(self.figure.edges)
-        self.figure.scale(20.0, 20.0, 200.0)
+        self.figure.scale(0.5, 0.5, 200.0)
         self.figure.rotate_x_axis_center(np.pi)
         self.figure.shift(100, 100, 130)
         self.projection_type = Projection.ORTHO_XOY
@@ -215,25 +195,6 @@ class WorkArea:
         self.canvas.delete("all")
         self.image = Image.new('RGB', (self.DEFAULT_WIDTH, self.DEFAULT_WIDTH), 'white')
         self.draw = ImageDraw.Draw(self.image)
-
-
-f_points = []
-g_points = []
-cnt = 20
-for x in range(cnt):
-    arg = (x ) - cnt/2
-    val = arg ** 3
-    f_points.append((arg+cnt/2, val/200))
-
-    arg_g = np.pi/6 + x*4*np.pi/6/(cnt-1)
-    g_points.append(((np.cos(arg_g)+0.81)*19/1.67, np.sin(arg_g)*8-4.0))
-
-g_points = list(reversed(g_points))
-
-[print(f_p) for f_p in f_points]
-print(f_points)
-[print(f_p) for f_p in g_points]
-print(g_points)
 
 gui = WorkArea()
 

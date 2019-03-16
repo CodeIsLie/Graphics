@@ -16,7 +16,6 @@ class Projection(Enum):
 
 
 def point_transfrom(point, matrix):
-    row_transformation = None
     point = np.append(point, [1])
     row_transformation = np.dot(point, matrix)
     if abs(row_transformation[3]) < 1e-10:
