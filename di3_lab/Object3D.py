@@ -229,38 +229,9 @@ class Figure:
         return self.get_projection(perspective_mat)
 
 
-class Cube(Figure):
-    def __init__(self):
-        point_list = [
-            [0, 0, 0],
-            [0, 0, 1],
-            [0, 1, 0],
-            [1, 0, 0],
-            [0, 1, 1],
-            [1, 0, 1],
-            [1, 1, 0],
-            [1, 1, 1]
-        ]
-        edges = [
-            (0, 1),
-            (0, 2),
-            (0, 3),
-            (1, 4),
-            (1, 5),
-            (2, 4),
-            (2, 6),
-            (3, 5),
-            (3, 6),
-            (7, 4),
-            (7, 5),
-            (7, 6)
-        ]
-        Figure.__init__(self, point_list, edges)
-
-
-class Hole(Figure):
+class Cylinder(Figure):
     """
-    единичная длина
+    создаёт цилиндр с единичной длина и единичным радиусом. направлен по оси OZ
     """
     def __init__(self, segments_count):
         angle_step = (np.pi/180) * 360 / segments_count
@@ -285,54 +256,14 @@ class Hole(Figure):
 
         Figure.__init__(self, points, edges)
 
-class Chair(Figure):
-    def __init__(self):
-        seat = Cube()
-        seat.scale(275, 50, 275)
-        seat.shift(0, 200, 0)
 
-        backrest = Cube()
-        backrest.scale(275, 140, 60)
-        backrest.shift(0, 420, 0)
-
-        backrest_leg_left = Cube()
-        backrest_leg_left.scale(25, 170, 25)
-        backrest_leg_left.shift(20, 250, 20)
-
-        backrest_leg_right = make_clone(backrest_leg_left)
-        backrest_leg_right.shift(210, 0, 0)
-
-        leg_1 = Cube()
-        leg_1.scale(25, 200, 25)
-        leg_1.point_list[0][2] += 10
-        leg_1.point_list[5][0] -= 10
-        leg_1.point_list[3][2] += 10
-        leg_1.point_list[3][0] -= 10
-
-        leg_2 = make_clone(leg_1)
-        leg_2.rotate_y_axis(90*np.pi/180)
-        leg_2.shift(230, 0, 255)
-
-        leg_3 = make_clone(leg_1)
-        leg_3.rotate_y_axis(180*np.pi/180)
-        leg_3.shift(255, 0, 45)
-
-        leg_4 = make_clone(leg_1)
-        leg_4.rotate_y_axis(270*np.pi/180)
-        leg_4.shift(45, 0, 20)
-
-        leg_1.shift(20, 0, 230)
-
-        hole = Hole(40)
-        hole.scale(35, 35, 60)
-        hole.shift(137, 490, 0)
-
-        offset = 0
-        all_points = []
-        all_edges = []
-        for obj in [seat, leg_1, leg_2, leg_3, leg_4, backrest_leg_left, backrest_leg_right,
-                    backrest, hole]:
-            all_points += obj.point_list
-            all_edges += [(x+offset, y+offset) for x, y in obj.edges]
-            offset += 8
-        Figure.__init__(self, all_points, all_edges)
+class LinedSurface(Figure):
+    def __init__(self, f_points, g_points):
+        if len(f_points) != len(g_points):
+            raise Exception("Expected 2 lists with the same length")
+        point_list = [(x, y, 0) for x, y in f_points] + [(x, y, 1) for x, y in g_points]
+        cnt_points = len(f_points)
+        edges = ([(i, i+1) for i in range(cnt_points-1)]        # связи между точками первой кривой
+                + [(i+cnt_points, i+cnt_points+1) for i in range(cnt_points-1)] # связи между точками второй кривой
+                + [(i, i+cnt_points) for i in range(cnt_points)]) # связи между точками первой и второй кривой
+        Figure.__init__(self, point_list, edges)
