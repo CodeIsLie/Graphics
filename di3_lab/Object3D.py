@@ -79,6 +79,9 @@ class Figure:
         self.edges = edges
 
     def calc_center(self):
+        if len(self.point_list) == 0:
+            self.center_point = np.array([0, 0, 0])
+            return
         mid_x = (max(self.point_list[:, 0]) + min(self.point_list[:, 0])) / 2
         mid_y = (max(self.point_list[:, 1]) + min(self.point_list[:, 1])) / 2
         mid_z = (max(self.point_list[:, 2]) + min(self.point_list[:, 2])) / 2
@@ -227,10 +230,13 @@ class Figure:
         ])
         return self.get_projection(perspective_mat)
 
+    def __str__(self):
+        return str(self.point_list)
+
 
 class Cylinder(Figure):
     """
-    создаёт цилиндр с единичной длина и единичным радиусом. направлен по оси OZ
+    создаёт цилиндр с единичной длиной и единичным радиусом. направлен по оси OZ
     """
     def __init__(self, segments_count):
         angle_step = (np.pi/180) * 360 / segments_count
