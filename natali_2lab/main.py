@@ -1,4 +1,4 @@
-from Object3D import *
+from Geometry3D import *
 from tkinter import *
 from PIL import Image, ImageTk, ImageDraw
 
@@ -18,7 +18,7 @@ class WorkArea:
 
         self.iso_mode = "iso_1"
         self.root = Tk()
-        self.root.title("3DPRO")
+        self.root.title("lab_2")
         self.root.resizable(False, False)
 
         self.canvas = Canvas(self.root, bg='white', width=self.DEFAULT_WIDTH, height=self.DEFAULT_WIDTH)
@@ -26,6 +26,17 @@ class WorkArea:
         self.image = Image.new('RGB', (self.DEFAULT_WIDTH, self.DEFAULT_HEIGHT), 'white')
         self.draw = ImageDraw.Draw(self.image)
 
+        self.projection_var = StringVar(self.root)
+        self.projection_var.set("orthographic_xoy")  # default value
+        possible_projections = ["orthographic_xoy",
+                                "orthographic_xoz",
+                                "orthographic_yoz",
+                                "isometric",
+                                "dimetric",
+                                "perspective_one",
+                                "perspective_two",
+                                "perspective_three"]
+        """
         Label(self.root, text="Тип проекции:             ").grid(row=2, column=1)
         self.projection_var = StringVar(self.root)
         self.projection_var.set("orthographic_xoy")  # default value
@@ -88,11 +99,11 @@ class WorkArea:
         self.redraw_button = Button(self.root, text='Redraw', command=self.redraw_all)
         self.redraw_button.grid(row=2, column=8)
 
-        self.redraw_button = Button(self.root, text='Next', command=self.next_perspective)
-        self.redraw_button.grid(row=4, column=8)
-
+        
+        """
+        self.next_nutton = Button(self.root, text='Next frame', command=self.next_perspective)
+        self.next_nutton.grid(row=4, column=8)
         self.redraw_all()
-
         self.root.mainloop()
 
     def project(self):
@@ -116,7 +127,10 @@ class WorkArea:
         elif projection_type == Projection.PERSPECTIVE_2:
             return figure.perspective_two_point().take_xy_coords()
         elif projection_type == Projection.PERSPECTIVE_3:
-            return figure.perspective_three_point().take_xy_coords()
+            perpective_fig = figure.perspective_three_point()
+            perpective_fig.shift(200, 200, 0)
+            perpective_fig.scale_center(1.5, 1.5, 1.5)
+            return perpective_fig.take_xy_coords()
 
     def select_projection(self):
         projection_dict = {
@@ -194,20 +208,22 @@ class WorkArea:
             self.figure.scale_center(1, 2, 1)
             self.projection_var.set("dimetric")
         elif self.projection_var.get() == "dimetric":
+            self.figure.shift(100, 100, 50)
             self.figure.scale_center(1.4, 1.4, 1.4)
-
-            self.figure.rotate_y_axis(70 * np.pi/180)
+            self.figure.rotate_x_axis_center(-20 * np.pi / 180)
+            self.figure.rotate_y_axis_center(50 * np.pi / 180)
             self.projection_var.set("perspective_one")
         elif self.projection_var.get() == "perspective_one":
-            self.figure = Display()
-            self.figure.rotate_x_axis_center(115 * np.pi/180)
-            self.figure.scale_center(1.2, 1.2, 1.2)
-            self.figure.shift(200, 200, 20)
+            self.figure.rotate_x_axis_center(-20 * np.pi / 180)
+            self.figure.rotate_y_axis_center(-20 * np.pi / 180)
+            self.figure.rotate_z_axis_center(-20 * np.pi / 180)
+
             self.projection_var.set("perspective_two")
         elif self.projection_var.get() == "perspective_two":
-            # self.figure = Chair()
-            self.figure.scale_center(1.5, 1.5, 1.5)
-            self.figure.rotate_x_axis_center(15 * np.pi/180)
+            self.figure.scale_center(1.4, 1.4, 1.4)
+            self.figure.rotate_x_axis_center(30 * np.pi / 180)
+            self.figure.rotate_y_axis_center(30 * np.pi / 180)
+            self.figure.rotate_z_axis_center(-10 * np.pi / 180)
             self.projection_var.set("perspective_three")
 
         self.select_projection()
