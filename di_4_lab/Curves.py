@@ -9,6 +9,8 @@ from enum import Enum
 import numpy as np
 from PIL import Image, ImageTk, ImageDraw
 
+from Object3D import *
+
 
 def get_Bezier_point(points, t):
     # if len(points) != 4:
@@ -74,7 +76,7 @@ def curve_draw(curve_type, point_list):
         pass
 
 
-def get_char_points():
+def get_char_raw_points():
     return [
         # C
         [(0, 0), (3, 0), (3, 2), (2, 2), (2, 1), (1, 1), (1, 4), (2, 4), (2, 3), (3, 3), (3, 5), (0, 5)],
@@ -84,22 +86,38 @@ def get_char_points():
         [(0, 1), (1, 0), (3, 0), (3, 5), (2, 5), (2, 1), (1, 1), (1, 5), (0, 5)],
         # А
         [(0, 1), (1, 0), (3, 0), (3, 5), (2, 5), (2, 4), (1, 4), (1, 5), (0, 5)],
+        [(1, 1), (2, 1), (2, 3), (1, 3)],
         # Й
         [(0, 0), (1, 0), (1, 3), (2, 1), (2, 0), (3, 0), (3, 5), (2, 5), (2, 2), (1, 4), (1, 5), (0, 5)],
+        [(1, -2), (2, -2), (2, -1), (1, -1)],
         # Н
         [(0, 0), (1, 0), (1, 2), (2, 2), (2, 0), (3, 0), (3, 5), (2, 5), (2, 3), (1, 3), (1, 5), (0, 5)]
     ]
 
 
+def get_char_figures():
+    char_points = get_char_raw_points()
+    scale_size = 20
+    char_points = [[(x+x_shift*scale_size, y+2, 0) for x, y in points]
+                   for points, x_shift in zip(char_points, [0, 5, 10, 15, 15, 20, 20, 25])]
+    figures = [Figure(points) for points in char_points]
+    for fig in figures:
+        fig.scale_center(scale_size, scale_size, scale_size)
+        fig.shift(scale_size*3, scale_size*5, 0)
+    figures[4].shift(0, -scale_size/2, 0)
+    figures[6].shift(0, -scale_size*3.5, 0)
+    return figures
+
+
 class WorkArea:
 
-    DEFAULT_WIDTH = 500
+    DEFAULT_WIDTH = 700
     DEFAULT_HEIGHT = 500
     DEFAULT_COLOR = 'black'
 
     def __init__(self):
         self.point_list = []
-        self.current_primitive_ind = -1
+        self.figures = get_char_figures()
 
         self.root = Tk()
         self.root.title("CurvePro")
@@ -108,28 +126,27 @@ class WorkArea:
         self.draw_button = Button(self.root, text='add point', command=self.use_drawer)
         self.draw_button.grid(row=3, column=0)
 
-        self.del_button = Button(self.root, text='delete point', command=self.remove_point)
-        self.del_button.grid(row=3, column=1)
-
-        self.move_button = Button(self.root, text='move point', command=self.use_mover)
-        self.move_button.grid(row=3, column=2)
-
         self.eraser_button = Button(self.root, text='Clear', command=self.clear_all)
         self.eraser_button.grid(row=3, column=3)
 
-        Label(self.root, text="Draw points here: ").grid(row=0, column=3)
-
-        self.canvas = Canvas(self.root, bg='white', width=self.DEFAULT_WIDTH, height=self.DEFAULT_WIDTH)
+        self.canvas = Canvas(self.root, bg='white', width=self.DEFAULT_WIDTH, height=self.DEFAULT_HEIGHT)
         self.canvas.grid(row=1, columnspan=10)
         self.image = Image.new('RGB', (self.DEFAULT_WIDTH, self.DEFAULT_HEIGHT), 'white')
         self.draw = ImageDraw.Draw(self.image)
 
-        self.point_location_label = Label(self.root, text='')
-        self.point_location_label.grid(row=5, column=4)
+        self.hermit_button = Button(self.root, text='hermit form', command=self.hermit_draw)
+        self.hermit_button.grid(row=3, column=3)
+
+        self.bezier_button = Button(self.root, text='bezier', command=self.bezier_draw)
+        self.bezier_button.grid(row=3, column=4)
+
+        self.b_spline_button = Button(self.root, text='B spline', command=self.b_spline_draw)
+        self.b_spline_button.grid(row=3, column=5)
 
         self.additional_points = []
         self.movable_point_ind = None
 
+        self.redraw_all()
         self.root.mainloop()
 
     def use_drawer(self):
@@ -141,10 +158,6 @@ class WorkArea:
         self.draw.ellipse([event.x-1, event.y-1, event.x+1, event.y+1], fill='red')
         self.canvas.image = ImageTk.PhotoImage(self.image)
         self.canvas.create_image(0, 0, image=self.canvas.image, anchor='nw')
-
-    def remove_point(self):
-        self.canvas.bind('<Button-1>', self.remove)
-        self.canvas.bind('<Button-3>', self.stop_removing)
 
     def remove(self, event):
         p_list = self.point_list
@@ -169,8 +182,33 @@ class WorkArea:
         # self.canvas.unbind('<Button-3>')
         # self.draw_current_primitive()
 
-    def draw_curve(self, curve_points, image_draw, color='black'):
+    def draw_line_figure(self, figure_ind):
+        figure = self.figures[figure_ind]
+        points = figure.take_xy_coords().point_list
+        print(points)
+        lines = [(p1, p2) for p1, p2 in zip(points, points[1:] + [points[0]])]
+        for p1, p2 in lines:
+            print(p1, p2)
+            self.draw.line((*p1, *p2), fill=WorkArea.DEFAULT_COLOR)
+
+    def line_draw(self):
+        for i in range(len(self.figures)):
+            self.draw_line_figure(i)
+
+    def hermit_draw(self):
+        pass
+
+    def bezier_draw(self):
+        for fig in self.figures:
+            point_list = fig.take_xy_coords().point_list
+            self.draw_curves(point_list+[point_list[0]])
+
+    def b_spline_draw(self):
+        pass
+
+    def draw_curve(self, curve_points, color='black'):
         first_point = curve_points[0]
+        image_draw = self.draw
         if len(curve_points) > 1:
             for point in curve_points[1:]:
                 image_draw.line([first_point[0], first_point[1], point[0], point[1]], width=1, fill=color)
@@ -178,28 +216,28 @@ class WorkArea:
         else:
             print("sorry, your line contains only 0 or 1 point")
 
-    def draw_curves(self):
-        if len(self.point_list) < 4:
+    def draw_curves(self, point_list):
+        if len(point_list) < 4:
             return
         self.additional_points = []
 
         main_points = []
         fictive_point = None
-        if len(self.point_list) % 2 == 1:
-            x1, y1 = self.point_list[-1]
-            x2, y2 = self.point_list[-2]
+        if len(point_list) % 2 == 1:
+            x1, y1 = point_list[0]
+            x2, y2 = point_list[-1]
             fictive_point = (x1 + x2) / 2, (y1 + y2) / 2
-            self.point_list.insert(-1, fictive_point)
+            point_list.insert(0, fictive_point)
 
-        first_point = self.point_list[0]
-        for i in range(1, len(self.point_list)-2, 2):
-            snd_point = self.point_list[i]
-            trd_point = self.point_list[i+1]
-            add_point = get_middle_point(trd_point, self.point_list[i+2])
+        first_point = point_list[0]
+        for i in range(1, len(point_list)-2, 2):
+            snd_point = point_list[i]
+            trd_point = point_list[i+1]
+            add_point = get_middle_point(trd_point, point_list[i+2])
 
-            last_point = self.point_list[-1] if i+3 == len(self.point_list) else add_point
+            last_point = point_list[-1] if i+3 == len(point_list) else add_point
             main_points.append([first_point, snd_point, trd_point, last_point])
-            if i + 3 == len(self.point_list):
+            if i + 3 == len(point_list):
                 break
 
             first_point = add_point
@@ -208,12 +246,12 @@ class WorkArea:
         # main_points = [self.point_list[:4]]
         for points in main_points:
             bezier_curve = get_Bezie_curve(points)
-            self.draw_curve(bezier_curve, self.draw)
+            self.draw_curve(bezier_curve)
             self.canvas.image = ImageTk.PhotoImage(self.image)
             self.canvas.create_image(0, 0, image=self.canvas.image, anchor='nw')
 
-        if fictive_point is not None:
-            self.point_list.remove(fictive_point)
+        # if fictive_point is not None:
+        #     point_list.remove(fictive_point)
 
     def draw_points(self):
         for x, y in self.point_list:
@@ -229,7 +267,10 @@ class WorkArea:
 
     def redraw_all(self):
         self.use_eraser()
-        self.draw_curves()
+        # self.line_draw()
+        self.bezier_draw()
+
+        # self.draw_curves()
         self.draw_points()
 
     def use_eraser(self):
@@ -237,23 +278,5 @@ class WorkArea:
         self.image = Image.new('RGB', (self.DEFAULT_WIDTH, self.DEFAULT_WIDTH), 'white')
         self.draw = ImageDraw.Draw(self.image)
 
-    def use_mover(self):
-        self.canvas.bind('<Button-1>', self.select_point)
-
-    def select_point(self, event):
-        p_list = self.point_list
-        for i in range(len(p_list)):
-            if abs(event.x - p_list[i][0]) < 3 and abs(event.y - p_list[i][1]) < 3:
-                self.movable_point_ind = i
-                self.canvas.bind('<Button-1>', self.move_point)
-                return
-
-    def move_point(self, event):
-        self.canvas.unbind('<Button-1>')
-        if self.movable_point_ind is None:
-            return
-        self.point_list[self.movable_point_ind] = event.x, event.y
-        self.movable_point_ind = None
-        self.redraw_all()
 
 gui = WorkArea()

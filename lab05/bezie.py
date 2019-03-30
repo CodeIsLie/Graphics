@@ -8,7 +8,6 @@ from enum import Enum
 
 import numpy as np
 from PIL import Image, ImageTk, ImageDraw
-from tkcolorpicker import askcolor
 
 
 def get_Bezier_point(points, t):
