@@ -12,32 +12,6 @@ from PIL import Image, ImageTk, ImageDraw
 from Object3D import *
 
 
-def get_Bezier_point(points, t):
-    # if len(points) != 4:
-    #     return None
-    t_ = 1-t
-    points_tensor = np.array(points)
-    points_tensor[1] *= 3
-    points_tensor[2] *= 3
-    points_tensor.transpose()
-    t_tenzor = np.array([t_ * t_ * t_,
-                         t_ * t_ * t,
-                         t_ * t * t,
-                         t * t * t])
-    t_tenzor.transpose()
-    res = np.dot(t_tenzor, points_tensor)
-    # print(res)
-    return res
-
-def get_Bezie_curve(main_points):
-    t = 0
-    points = []
-    while t < 1+0.005:
-        points.append(get_Bezier_point(main_points, t))
-        t += 0.01
-
-    return points
-
 def get_middle_point(p1, p2):
     x1, y1 = p1
     x2, y2 = p2
@@ -48,7 +22,7 @@ def get_curve_matrices():
     return {
         'hermit': np.array([
             [2,  -2,  1,  1],
-            [-3,  3, -1, -1],
+            [-3,  3, -2, -1],
             [0,   0,  1,  0],
             [1,   0,  0,  0]
         ]),
@@ -67,11 +41,23 @@ def get_curve_matrices():
         }
 
 
-def curve_draw(curve_type, point_list):
+def get_curve_part(curve_matrix, points):
+    points = np.array(points)
+    drawed_points = []
+    for t in np.arange(0, 1, 0.001):
+        t_tenzor = np.array([t*t*t, t*t, t, 1]).reshape((1, 4))
+        point = t_tenzor @ curve_matrix @ points
+        drawed_points.append(point.tolist()[0])
+
+    return drawed_points
+
+
+def get_curve(curve_type, point_list):
     if curve_type == 'hermit':
         pass
     elif curve_type == 'bezier':
-        pass
+
+        return get_curve_part(get_curve_matrices()['bezier'], point_list)
     elif curve_type == 'b_spline':
         pass
 
@@ -178,17 +164,14 @@ class WorkArea:
     def stop_drawing(self, event):
         self.redraw_all()
         print("stop drawing")
-        # self.canvas.unbind('<Button-1>')
-        # self.canvas.unbind('<Button-3>')
-        # self.draw_current_primitive()
 
     def draw_line_figure(self, figure_ind):
         figure = self.figures[figure_ind]
         points = figure.take_xy_coords().point_list
-        print(points)
+        # print(points)
         lines = [(p1, p2) for p1, p2 in zip(points, points[1:] + [points[0]])]
         for p1, p2 in lines:
-            print(p1, p2)
+            # print(p1, p2)
             self.draw.line((*p1, *p2), fill=WorkArea.DEFAULT_COLOR)
 
     def line_draw(self):
@@ -201,6 +184,7 @@ class WorkArea:
     def bezier_draw(self):
         for fig in self.figures:
             point_list = fig.take_xy_coords().point_list
+            # print(list(zip(point_list, point_list_1)))
             self.draw_curves(point_list+[point_list[0]])
 
     def b_spline_draw(self):
@@ -245,8 +229,9 @@ class WorkArea:
 
         # main_points = [self.point_list[:4]]
         for points in main_points:
-            bezier_curve = get_Bezie_curve(points)
+            bezier_curve = get_curve_part(get_curve_matrices()['hermit'], points)
             self.draw_curve(bezier_curve)
+
             self.canvas.image = ImageTk.PhotoImage(self.image)
             self.canvas.create_image(0, 0, image=self.canvas.image, anchor='nw')
 
