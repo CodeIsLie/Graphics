@@ -1,24 +1,42 @@
-from Geometry3D import *
+from Object3D import *
+from Intersection import *
 from tkinter import *
 from PIL import Image, ImageTk, ImageDraw
+
+f_points = [(60, 300), (100, 250), (140, 225), (180, 200), (220, 184), (260, 167), (300, 156), (340, 144), (380, 138),
+            (420, 135), (460, 135), (500, 138), (540, 144), (580, 156), (620, 167), (660, 184), (700, 200), (740, 225),
+            (780, 250), (820, 300)]
+g_points = [(60, 130), (140, 132), (220, 133), (300, 135), (340, 136), (380, 140), (400, 150), (420, 164), (427, 195),
+            (434, 232), (440, 250), (460, 270), (480, 277), (500, 280), (540, 285), (580, 286), (620, 287), (660, 290),
+            (740, 291), (820, 293)]
+
 
 class WorkArea:
     DEFAULT_WIDTH = 600
     DEFAULT_HEIGHT = 600
     DEFAULT_COLOR = 'black'
+    INTERSECTION_COLOR = (139, 0, 255)
 
     def __init__(self):
-        self.figure = Display()
-        print(self.figure.point_list)
-        print(self.figure.edges)
-        self.figure.scale(6, 6, 6)
-        self.figure.rotate_y_axis_center(np.pi)
-        self.figure.shift(100, 100, 130)
+        self.surface = LinedSurface(f_points, g_points)
+        self.cylinder = Cylinder(30)
+        self.cylinder_rad = 120
+
+        self.surface.scale(0.4, 0.4, 350.0)
+        self.surface.shift(-180, -100, -180)
+        self.surface.rotate_x_axis_center(np.pi / 2)
+
+        self.cylinder.scale_center(self.cylinder_rad, self.cylinder_rad, 250)
+
+        self.x_angle = 0
+        self.y_angle = 0
+        self.z_angle = 0
+
         self.projection_type = Projection.ORTHO_XOY
 
         self.iso_mode = "iso_1"
         self.root = Tk()
-        self.root.title("lab_2")
+        self.root.title("3DPRO")
         self.root.resizable(False, False)
 
         self.canvas = Canvas(self.root, bg='white', width=self.DEFAULT_WIDTH, height=self.DEFAULT_WIDTH)
@@ -26,21 +44,7 @@ class WorkArea:
         self.image = Image.new('RGB', (self.DEFAULT_WIDTH, self.DEFAULT_HEIGHT), 'white')
         self.draw = ImageDraw.Draw(self.image)
 
-        self.projection_var = StringVar(self.root)
-        self.projection_var.set("orthographic_xoy")  # default value
-        possible_projections = ["orthographic_xoy",
-                                "orthographic_xoz",
-                                "orthographic_yoz",
-                                "isometric",
-                                "dimetric",
-                                "perspective_one",
-                                "perspective_two",
-                                "perspective_three"]
-
-        self.choose_projection = OptionMenu(self.root, self.projection_var, *possible_projections)
-        self.choose_projection.grid(row=3, column=1)
-        """
-        Label(self.root, text="Тип проекции:             ").grid(row=2, column=1)
+        # Label(self.root, text="Тип проекции:             ").grid(row=2, column=1)
         self.projection_var = StringVar(self.root)
         self.projection_var.set("orthographic_xoy")  # default value
         possible_projections = ["orthographic_xoy",
@@ -102,38 +106,41 @@ class WorkArea:
         self.redraw_button = Button(self.root, text='Redraw', command=self.redraw_all)
         self.redraw_button.grid(row=2, column=8)
 
-        
-        """
-        self.next_nutton = Button(self.root, text='Next frame', command=self.next_perspective)
-        self.next_nutton.grid(row=3, column=8)
+        self.redraw_button = Button(self.root, text='Next', command=self.next_perspective)
+        self.redraw_button.grid(row=4, column=8)
+
         self.redraw_all()
+
         self.root.mainloop()
 
-    def project(self):
+    def project(self, figure):
         projection_type = self.projection_type
-        figure = self.figure
+
+        shifted_copy = make_clone(figure)
+
+        shifted_copy.rotate_x_axis_center(self.x_angle)
+        shifted_copy.rotate_y_axis_center(self.y_angle)
+        shifted_copy.rotate_z_axis_center(self.z_angle)
+        shifted_copy.shift(300, 300, 200)
         # Orthographic projections
         if projection_type == Projection.ORTHO_XOY:
-            return figure.orthographic_XOY().take_xy_coords()
+            return shifted_copy.orthographic_XOY().take_xy_coords()
         elif projection_type == Projection.ORTHO_XOZ:
-            return figure.orthographic_XOZ().take_xz_coords()
+            return shifted_copy.orthographic_XOZ().take_xz_coords()
         elif projection_type == Projection.ORTHO_YOZ:
-            return figure.orthographic_YOZ().take_yz_coords()
+            return shifted_copy.orthographic_YOZ().take_yz_coords()
         # Axonometric projections
         elif projection_type == Projection.ISOMETRIC:
-            return figure.isometric().take_xy_coords()
+            return shifted_copy.isometric().take_xy_coords()
         elif projection_type == Projection.DIMETRIC:
-            return figure.dimetric().take_xy_coords()
+            return shifted_copy.dimetric().take_xy_coords()
         # Perspective projections
         elif projection_type == Projection.PERSPECTIVE_1:
-            return figure.perspective_one_point().take_xy_coords()
+            return shifted_copy.perspective_one_point().take_xy_coords()
         elif projection_type == Projection.PERSPECTIVE_2:
-            return figure.perspective_two_point().take_xy_coords()
+            return shifted_copy.perspective_two_point().take_xy_coords()
         elif projection_type == Projection.PERSPECTIVE_3:
-            perpective_fig = figure.perspective_three_point()
-            perpective_fig.shift(200, 200, 0)
-            perpective_fig.scale_center(1.5, 1.5, 1.5)
-            return perpective_fig.take_xy_coords()
+            return shifted_copy.perspective_three_point().take_xy_coords()
 
     def select_projection(self):
         projection_dict = {
@@ -150,7 +157,7 @@ class WorkArea:
         self.redraw_all()
 
     def shift(self):
-        figure = self.figure
+        figure = self.surface
         dx = float(self.x_input_box.get())
         dy = float(self.y_input_box.get())
         dz = float(self.z_input_box.get())
@@ -160,85 +167,81 @@ class WorkArea:
 
     def center_transform(func):
         def magic(self):
-            mid_x, mid_y, mid_z = self.figure.center_point
-            self.figure.shift(-mid_x, -mid_y, -mid_z)
+            mid_x, mid_y, mid_z = self.surface.center_point
+            self.surface.shift(-mid_x, -mid_y, -mid_z)
             func(self)
-            self.figure.shift(mid_x, mid_y, mid_z)
+            self.surface.shift(mid_x, mid_y, mid_z)
             self.redraw_all()
         return magic
 
     @center_transform
     def scale(self):
-        figure = self.figure
+        figure = self.surface
         mx = float(self.kx_input_box.get())
         my = float(self.ky_input_box.get())
         mz = float(self.kz_input_box.get())
         figure.scale(mx, my, mz)
         print("success scale mx={} my={} mz={}".format(mx, my, mz))
 
-    @center_transform
     def x_rotate(self):
         angle = float(self.angle_input_box.get()) * np.pi/ 180
-        self.figure.rotate_x_axis(angle)
+        self.x_angle += angle
+        self.redraw_all()
 
-    @center_transform
     def y_rotate(self):
         angle = float(self.angle_input_box.get()) * np.pi/ 180
-        self.figure.rotate_y_axis(angle)
+        self.y_angle += angle
+        self.redraw_all()
 
-    @center_transform
     def z_rotate(self):
         angle = float(self.angle_input_box.get()) * np.pi/ 180
-        self.figure.rotate_z_axis(angle)
+        self.z_angle += angle
+        self.redraw_all()
+
+    def draw_figure(self, figure):
+        figure_projection = self.project(figure)
+        for point_ind1, point_ind2 in figure_projection.edges:
+            x1, y1 = figure_projection.point_list[point_ind1]
+            x2, y2 = figure_projection.point_list[point_ind2]
+            self.draw.line([x1, y1, x2, y2], width=1, fill=WorkArea.DEFAULT_COLOR)
+
+    def draw_intersection_points(self):
+        surface = self.surface
+        line_cnt_points = len(self.surface.point_list) // 2
+        for surf_a, surf_b, surf_c, surf_d in zip(surface.point_list[:line_cnt_points],
+                                                  surface.point_list[1:line_cnt_points],
+                                                  surface.point_list[line_cnt_points:],
+                                                  surface.point_list[line_cnt_points + 1:]
+                                                  ):
+            points = find_point_intersections((surf_a, surf_b), (surf_c, surf_d), 100, self.cylinder_rad)
+            points = np.array(list(set([(int(x), int(y), int(z)) for x, y, z in points])))
+            projected_points = self.project(Figure(points, center_point=self.cylinder.center_point, change_center=False))
+
+            if len(projected_points.point_list) > 0:
+                for x, y in projected_points.point_list:
+                    self.draw.point([x, y], fill=WorkArea.INTERSECTION_COLOR)
 
     def next_perspective(self):
         if self.projection_var.get() == "orthographic_xoy":
             self.projection_var.set("orthographic_xoz")
         elif self.projection_var.get() == "orthographic_xoz":
-            self.figure.rotate_x_axis_center(np.pi / 180)
             self.projection_var.set("orthographic_yoz")
         elif self.projection_var.get() == "orthographic_yoz":
-            self.figure.rotate_x_axis_center(90 * np.pi / 180)
-            self.figure.rotate_z_axis_center(180 * np.pi / 180)
+            # self.x_angle += 90
             self.projection_var.set("isometric")
-        elif self.projection_var.get() == "isometric" and self.iso_mode == "iso_1":
-            self.figure.scale_center(0.5, 1, 1)
-            self.iso_mode = "iso_2"
-        elif self.projection_var.get() == "isometric" and self.iso_mode == "iso_2":
-            self.figure.scale_center(2, 0.5, 1)
-            self.iso_mode = "iso_3"
-        elif self.projection_var.get() == "isometric" and self.iso_mode == "iso_3":
-            self.figure.scale_center(1, 2, 1)
-            self.projection_var.set("dimetric")
-        elif self.projection_var.get() == "dimetric":
-            self.figure.shift(100, 100, 50)
-            self.figure.scale_center(1.4, 1.4, 1.4)
-            self.figure.rotate_x_axis_center(-20 * np.pi / 180)
-            self.figure.rotate_y_axis_center(50 * np.pi / 180)
-            self.projection_var.set("perspective_one")
-        elif self.projection_var.get() == "perspective_one":
-            self.figure.rotate_x_axis_center(-20 * np.pi / 180)
-            self.figure.rotate_y_axis_center(-20 * np.pi / 180)
-            self.figure.rotate_z_axis_center(-20 * np.pi / 180)
-
-            self.projection_var.set("perspective_two")
-        elif self.projection_var.get() == "perspective_two":
-            self.figure.scale_center(1.4, 1.4, 1.4)
-            self.figure.rotate_x_axis_center(30 * np.pi / 180)
-            self.figure.rotate_y_axis_center(30 * np.pi / 180)
-            self.figure.rotate_z_axis_center(-10 * np.pi / 180)
-            self.projection_var.set("perspective_three")
+            self.y_angle += 90 * np.pi/180
+            self.z_angle += 90 * np.pi/180
+        elif self.projection_var.get() == "isometric":
+            self.y_angle += 10* np.pi/180
+            # self.projection_var.set("perspective_one")
 
         self.select_projection()
 
     def redraw_all(self):
         self.erase()
-        # self.figure.draw(self.draw, self.projection)
-        figure_projection = self.project()
-        for point_ind1, point_ind2 in figure_projection.edges:
-            x1, y1 = figure_projection.point_list[point_ind1]
-            x2, y2 = figure_projection.point_list[point_ind2]
-            self.draw.line([x1, y1, x2, y2], width=1, fill=WorkArea.DEFAULT_COLOR)
+        self.draw_figure(self.surface)
+        self.draw_figure(self.cylinder)
+        self.draw_intersection_points()
 
         self.canvas.image = ImageTk.PhotoImage(self.image)
         self.canvas.create_image(0, 0, image=self.canvas.image, anchor='nw')
@@ -250,3 +253,4 @@ class WorkArea:
 
 
 gui = WorkArea()
+
