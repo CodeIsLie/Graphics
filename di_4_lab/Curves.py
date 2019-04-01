@@ -110,9 +110,6 @@ class WorkArea:
         self.root.title("CurvePro")
         self.root.resizable(False, False)
 
-        self.draw_button = Button(self.root, text='add point', command=self.use_drawer)
-        self.draw_button.grid(row=3, column=0)
-
         self.eraser_button = Button(self.root, text='Clear', command=self.clear_all)
         self.eraser_button.grid(row=3, column=3)
 
