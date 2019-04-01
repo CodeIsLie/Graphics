@@ -3,8 +3,6 @@ import random
 from copy import copy
 from math import cos, sin, sqrt, acos
 from tkinter import *
-from tkinter import filedialog
-from enum import Enum
 
 import numpy as np
 from PIL import Image, ImageTk, ImageDraw
@@ -41,12 +39,12 @@ def get_curve_matrices():
         }
 
 
-def get_curve_part(curve_matrix, points):
+def get_curve_part(curve_matrix, points, k=1.0):
     points = np.array(points)
     drawed_points = []
     for t in np.arange(0, 1, 0.001):
         t_tenzor = np.array([t*t*t, t*t, t, 1]).reshape((1, 4))
-        point = t_tenzor @ curve_matrix @ points
+        point = t_tenzor @ curve_matrix @ points * k
         drawed_points.append(point.tolist()[0])
 
     return drawed_points
@@ -54,12 +52,15 @@ def get_curve_part(curve_matrix, points):
 
 def get_curve(curve_type, point_list):
     if curve_type == 'hermit':
-        pass
+        p1, p2, p3, p4 = point_list
+        r1 = p1 - p2
+        r4 = p4 - p3
+        point_tensor = np.array([p1, p4, r1, r4])
+        return get_curve_part(get_curve_matrices()['hermit'], point_tensor)
     elif curve_type == 'bezier':
-
         return get_curve_part(get_curve_matrices()['bezier'], point_list)
     elif curve_type == 'b_spline':
-        pass
+        return get_curve_part(get_curve_matrices()['b_spline'], point_list, 0.15)
 
 
 def get_char_raw_points():
@@ -120,6 +121,9 @@ class WorkArea:
         self.image = Image.new('RGB', (self.DEFAULT_WIDTH, self.DEFAULT_HEIGHT), 'white')
         self.draw = ImageDraw.Draw(self.image)
 
+        self.normal_form_button = Button(self.root, text='normal form', command=self.line_draw)
+        self.normal_form_button.grid(row=3, column=2)
+
         self.hermit_button = Button(self.root, text='hermit form', command=self.hermit_draw)
         self.hermit_button.grid(row=3, column=3)
 
@@ -168,27 +172,44 @@ class WorkArea:
     def draw_line_figure(self, figure_ind):
         figure = self.figures[figure_ind]
         points = figure.take_xy_coords().point_list
-        # print(points)
         lines = [(p1, p2) for p1, p2 in zip(points, points[1:] + [points[0]])]
         for p1, p2 in lines:
-            # print(p1, p2)
             self.draw.line((*p1, *p2), fill=WorkArea.DEFAULT_COLOR)
 
     def line_draw(self):
+        self.use_eraser()
         for i in range(len(self.figures)):
             self.draw_line_figure(i)
 
+        self.canvas.image = ImageTk.PhotoImage(self.image)
+        self.canvas.create_image(0, 0, image=self.canvas.image, anchor='nw')
+
     def hermit_draw(self):
-        pass
+        self.use_eraser()
+        for fig in self.figures:
+            point_list = fig.take_xy_coords().point_list.copy()
+            self.draw_curves_hermit(point_list)
+
+        self.canvas.image = ImageTk.PhotoImage(self.image)
+        self.canvas.create_image(0, 0, image=self.canvas.image, anchor='nw')
 
     def bezier_draw(self):
+        self.use_eraser()
         for fig in self.figures:
-            point_list = fig.take_xy_coords().point_list
-            # print(list(zip(point_list, point_list_1)))
-            self.draw_curves(point_list+[point_list[0]])
+            point_list = fig.take_xy_coords().point_list.copy()
+            self.draw_curves_bezier(point_list)
+
+        self.canvas.image = ImageTk.PhotoImage(self.image)
+        self.canvas.create_image(0, 0, image=self.canvas.image, anchor='nw')
 
     def b_spline_draw(self):
-        pass
+        self.use_eraser()
+        for fig in self.figures:
+            point_list = fig.take_xy_coords().point_list.copy()
+            self.draw_curves_bspline(point_list)
+
+        self.canvas.image = ImageTk.PhotoImage(self.image)
+        self.canvas.create_image(0, 0, image=self.canvas.image, anchor='nw')
 
     def draw_curve(self, curve_points, color='black'):
         first_point = curve_points[0]
@@ -200,18 +221,48 @@ class WorkArea:
         else:
             print("sorry, your line contains only 0 or 1 point")
 
-    def draw_curves(self, point_list):
+    def draw_curves_hermit(self, point_list):
         if len(point_list) < 4:
             return
-        self.additional_points = []
 
-        main_points = []
-        fictive_point = None
-        if len(point_list) % 2 == 1:
+        if len(point_list) % 2 == 0:
             x1, y1 = point_list[0]
             x2, y2 = point_list[-1]
             fictive_point = (x1 + x2) / 2, (y1 + y2) / 2
             point_list.insert(0, fictive_point)
+        point_list.append(point_list[0])
+
+        first_point = point_list[0]
+        new_point_list = [first_point]
+        for i in range(1, len(point_list) - 2, 2):
+            snd_point = point_list[i]
+            trd_point = point_list[i + 1]
+            add_point = get_middle_point(trd_point, point_list[i + 2])
+
+            last_point = point_list[-1] if i + 3 == len(point_list) else add_point
+            new_point_list += [snd_point, trd_point, last_point]
+            if i + 3 == len(point_list):
+                break
+
+        cnt = len(new_point_list)
+        new_point_list = new_point_list + new_point_list[:4]
+
+        for i in range(cnt):
+            points = new_point_list[i:i+4]
+            points_tenzor = np.array([points[1], points[0], points[3], points[2]])
+            hermit_curve = get_curve('hermit', points_tenzor)
+            self.draw_curve(hermit_curve)
+
+    def draw_curves_bezier(self, point_list):
+        if len(point_list) < 4:
+            return
+        main_points = []
+        if len(point_list) % 2 == 0:
+            x1, y1 = point_list[0]
+            x2, y2 = point_list[-1]
+            fictive_point = (x1 + x2) / 2, (y1 + y2) / 2
+            point_list.insert(0, fictive_point)
+        point_list.append(point_list[0])
 
         first_point = point_list[0]
         for i in range(1, len(point_list)-2, 2):
@@ -225,38 +276,22 @@ class WorkArea:
                 break
 
             first_point = add_point
-            self.additional_points.append(add_point)
 
-        # main_points = [self.point_list[:4]]
         for points in main_points:
-            bezier_curve = get_curve_part(get_curve_matrices()['hermit'], points)
+            bezier_curve = get_curve('bezier', points)
             self.draw_curve(bezier_curve)
 
-            self.canvas.image = ImageTk.PhotoImage(self.image)
-            self.canvas.create_image(0, 0, image=self.canvas.image, anchor='nw')
+    def draw_curves_bspline(self, point_list):
+        cnt = len(point_list)
+        point_list = point_list + point_list[:4]
 
-        # if fictive_point is not None:
-        #     point_list.remove(fictive_point)
-
-    def draw_points(self):
-        for x, y in self.point_list:
-            self.draw.ellipse([x - 1, y - 1, x + 1, y + 1], fill='red')
-            self.canvas.image = ImageTk.PhotoImage(self.image)
-            self.canvas.create_image(0, 0, image=self.canvas.image, anchor='nw')
-
-    def draw_add_points(self):
-        for x, y in self.additional_points:
-            self.draw.ellipse([x - 1, y - 1, x + 1, y + 1], fill='green')
-            self.canvas.image = ImageTk.PhotoImage(self.image)
-            self.canvas.create_image(0, 0, image=self.canvas.image, anchor='nw')
+        for i in range(cnt):
+            points = point_list[i:i + 4]
+            b_spline_curve = get_curve('b_spline', points)
+            self.draw_curve(b_spline_curve)
 
     def redraw_all(self):
         self.use_eraser()
-        # self.line_draw()
-        self.bezier_draw()
-
-        # self.draw_curves()
-        self.draw_points()
 
     def use_eraser(self):
         self.canvas.delete("all")
